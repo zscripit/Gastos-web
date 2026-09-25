@@ -1,0 +1,583 @@
+/* ===========================================================================
+   Landing — página pública de entrada.
+
+   Reutiliza los tokens de app.css (base, superficies translúcidas, acento)
+   para que pasar de la landing a la app no se sienta como cambiar de sitio.
+   Las ilustraciones son SVG en línea pintadas con esas mismas variables.
+   =========================================================================== */
+
+.landing {
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background:
+        radial-gradient(70% 45% at 75% 8%, oklch(0.72 0.15 165 / 0.10), transparent 70%),
+        radial-gradient(50% 35% at 10% 30%, oklch(0.72 0.15 165 / 0.04), transparent 70%),
+        var(--bg);
+}
+
+.landing main,
+.lp-topbar,
+.lp-footer {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/* --- Barra superior ----------------------------------------------------- */
+
+.lp-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: calc(env(safe-area-inset-top) + 14px);
+    padding-bottom: 14px;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.lp-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.lp-brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--surface-strong);
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow: var(--bevel);
+    color: var(--accent);
+}
+
+.lp-brand-sm { font-size: 0.9rem; }
+.lp-brand-sm .lp-brand-mark { width: 24px; height: 24px; border-radius: 7px; }
+
+.lp-topbar-actions { display: flex; gap: 6px; }
+
+/* --- Hero --------------------------------------------------------------- */
+
+.lp-hero {
+    display: grid;
+    gap: 48px;
+    padding-top: 36px;
+    padding-bottom: 64px;
+}
+
+.lp-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 10px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.lp-eyebrow-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.lp-title {
+    margin-top: 20px;
+    font-size: clamp(2.1rem, 6.4vw, 3.15rem);
+    font-weight: 700;
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+}
+
+/* El acento del titular es un degradado sutil, no un color plano: le da
+   presencia sin gritar. */
+.lp-title-accent {
+    display: block;
+    background: linear-gradient(100deg, var(--text) 10%, var(--accent) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.lp-lead {
+    margin-top: 18px;
+    max-width: 46ch;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.lp-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.lp-btn-lg {
+    min-height: 48px;
+    padding: 0 22px;
+    font-size: 0.95rem;
+}
+
+.lp-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 22px;
+    color: var(--text-subtle);
+    font-size: 0.85rem;
+}
+
+.lp-proof li { display: inline-flex; align-items: center; gap: 6px; }
+.lp-proof svg { color: var(--accent); }
+
+/* --- Ilustración del hero: el teléfono ---------------------------------- */
+
+.lp-hero-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 460px;
+}
+
+.lp-glow {
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, oklch(0.72 0.15 165 / 0.22), transparent 65%);
+    filter: blur(20px);
+}
+
+.lp-phone {
+    position: relative;
+    width: 270px;
+    padding: 10px;
+    border-radius: 40px;
+    background: linear-gradient(160deg, oklch(0.3 0.004 160), oklch(0.17 0.003 160));
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: lp-float 7s ease-in-out infinite;
+}
+
+.lp-phone-notch {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    width: 78px;
+    height: 20px;
+    border-radius: 999px;
+    background: #000;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.lp-phone-screen {
+    position: relative;
+    overflow: hidden;
+    height: 520px;
+    padding: 50px 14px 70px;
+    border-radius: 31px;
+    background:
+        radial-gradient(120% 50% at 50% 0%, oklch(0.72 0.15 165 / 0.07), transparent 70%),
+        var(--bg);
+}
+
+.lp-phone-title {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.lp-phone-sub {
+    margin: 10px 0 10px;
+    font-size: 0.58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-subtle);
+}
+
+/* Las tarjetas reales, a escala de teléfono dentro del mockup. */
+.lp-mini-card {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.lp-mini-card .credit-card-bank { font-size: 0.55rem; gap: 5px; }
+.lp-mini-card .badge { font-size: 0.55rem; padding: 2px 7px; }
+.lp-mini-card .credit-card-body { margin-top: 8px; gap: 8px; }
+.lp-mini-card .credit-card-name { font-size: 0.9rem; }
+.lp-mini-card .list-subtitle { font-size: 0.66rem; }
+.lp-mini-card .cycle-ring { transform: scale(0.78); margin: -6px; }
+
+.lp-phone-tabbar {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: 56px;
+    padding-bottom: 8px;
+    border-top: var(--hairline) solid var(--border);
+    background: color-mix(in srgb, var(--bg-deep) 85%, transparent);
+    color: var(--text-subtle);
+}
+
+.lp-phone-tabbar span { display: grid; place-items: center; }
+.lp-phone-tabbar .is-active { color: var(--text); }
+
+/* Chips flotantes: la notificación y el MSI, lo que la app promete. */
+.lp-chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 10px 10px;
+    border-radius: 14px;
+    background: color-mix(in srgb, oklch(0.24 0.004 160) 88%, transparent);
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.lp-chip strong { display: block; font-weight: 600; white-space: nowrap; }
+.lp-chip small { display: block; color: var(--text-subtle); font-size: 0.7rem; white-space: nowrap; }
+
+.lp-chip-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+.lp-chip-icon.is-warning { background: var(--warning-dim); color: var(--warning); }
+
+/* Se asoma por el borde izquierdo del teléfono sin tapar su contenido. */
+.lp-chip-top {
+    top: 140px;
+    right: 50%;
+    margin-right: 108px;
+    animation: lp-float 6s ease-in-out infinite reverse;
+}
+
+.lp-chip-bottom {
+    bottom: 70px;
+    left: 50%;
+    margin-left: 50px;
+    animation: lp-float 8s ease-in-out 1s infinite;
+}
+
+.lp-chip-progress {
+    width: 110px;
+    height: 4px;
+    margin: 5px 0 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.lp-chip-progress i {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+}
+
+@keyframes lp-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* --- Secciones ---------------------------------------------------------- */
+
+.lp-section {
+    padding-top: 56px;
+    padding-bottom: 56px;
+    border-top: var(--hairline) solid var(--border);
+}
+
+.lp-kicker {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+
+.lp-h2 {
+    max-width: 22ch;
+    font-size: clamp(1.6rem, 4.5vw, 2.3rem);
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+}
+
+.lp-h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* Problema */
+.lp-problem-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.lp-problem-item {
+    display: flex;
+    gap: 16px;
+    padding: 18px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    box-shadow: var(--bevel);
+    color: var(--text-muted);
+}
+
+.lp-problem-num {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--text-subtle);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Funciones */
+.lp-features {
+    display: grid;
+    gap: 14px;
+    margin-top: 32px;
+}
+
+.lp-feature {
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    box-shadow: var(--bevel);
+    transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.lp-feature:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+
+.lp-feature h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.lp-feature p {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.lp-illustration {
+    border-radius: var(--radius);
+    background:
+        radial-gradient(80% 70% at 50% 40%, oklch(0.72 0.15 165 / 0.06), transparent 70%),
+        var(--recessed);
+    border: var(--hairline) solid var(--border);
+}
+
+.lp-illustration svg { display: block; width: 100%; height: auto; }
+
+/* --- Piezas de ilustración ---
+   Clases en vez de colores fijos: las ilustraciones siguen al tema. */
+
+.ill-surface      { fill: rgba(255, 255, 255, 0.045); stroke: var(--border-strong); stroke-width: 0.8; }
+.ill-front        { fill: oklch(0.26 0.004 160); }
+.ill-bar          { fill: rgba(255, 255, 255, 0.28); }
+.ill-bar-soft     { fill: rgba(255, 255, 255, 0.12); }
+.ill-line         { stroke: var(--border-strong); stroke-width: 1.5; fill: none; }
+.ill-track        { stroke: rgba(255, 255, 255, 0.12); stroke-width: 3; fill: none; }
+.ill-accent       { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; }
+.ill-accent-line  { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; }
+.ill-accent-fill  { fill: var(--accent); }
+.ill-warning      { stroke: var(--warning); stroke-width: 3; fill: none; stroke-linecap: round; }
+.ill-warning-fill { fill: var(--warning); }
+.ill-dot          { fill: var(--bg); stroke: var(--border-strong); stroke-width: 1.5; }
+.ill-dot-soft     { fill: rgba(255, 255, 255, 0.18); }
+.ill-dot-done     { fill: var(--accent); }
+.ill-dot-now      { fill: var(--bg); stroke: var(--warning); stroke-width: 2.5; }
+.ill-day          { fill: rgba(255, 255, 255, 0.06); }
+.ill-day-pay      { fill: var(--warning); }
+.ill-app          { fill: oklch(0.3 0.02 165); stroke: var(--accent); stroke-width: 1; }
+.ill-app-mark     { fill: var(--accent); }
+.ill-text         { fill: var(--text-subtle); font-size: 9px; font-family: var(--font); }
+.ill-text-strong  { fill: var(--text); font-size: 12px; font-weight: 650; font-family: var(--font); }
+.ill-float        { animation: lp-float 5s ease-in-out infinite; }
+
+/* Instalación */
+.lp-install {
+    display: grid;
+    gap: 36px;
+    align-items: center;
+}
+
+.lp-steps {
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.lp-steps li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.lp-steps li strong { color: var(--text); font-weight: 550; }
+
+.lp-steps span {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--surface-strong);
+    border: var(--hairline) solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.lp-install-art svg { display: block; width: 100%; max-width: 380px; margin: 0 auto; }
+
+/* Privacidad */
+.lp-privacy {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.lp-privacy p {
+    margin-top: 6px;
+    max-width: 56ch;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+.lp-privacy-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: var(--hairline) solid oklch(0.72 0.15 165 / 0.3);
+}
+
+/* Llamada final */
+.lp-final {
+    margin: 16px 0 64px;
+    padding: 48px 24px;
+    text-align: center;
+    border-radius: 20px;
+    background:
+        radial-gradient(80% 90% at 50% 0%, oklch(0.72 0.15 165 / 0.14), transparent 70%),
+        var(--surface);
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow: var(--bevel);
+}
+
+.lp-final .lp-h2 { margin: 0 auto; }
+.lp-final .lp-lead { margin: 10px auto 26px; }
+
+/* Pie */
+.lp-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 24px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 28px);
+    border-top: var(--hairline) solid var(--border);
+    color: var(--text-subtle);
+    font-size: 0.8rem;
+}
+
+/* --- Teléfono pequeño: los chips no caben a los lados -------------------- */
+
+@media (max-width: 480px) {
+    .lp-chip-top    { right: auto; left: 0; margin-right: 0; top: 8px; }
+    .lp-chip-bottom { left: auto; right: 0; margin-left: 0; bottom: 30px; }
+    .lp-topbar-actions .btn-ghost { display: none; }
+}
+
+/* --- Tableta ------------------------------------------------------------ */
+
+@media (min-width: 640px) {
+    .landing main, .lp-topbar, .lp-footer { padding-left: 32px; padding-right: 32px; }
+    .lp-problem-grid { grid-template-columns: repeat(3, 1fr); }
+    .lp-problem-item { flex-direction: column; gap: 10px; }
+    .lp-features { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --- Escritorio: hero a dos columnas ------------------------------------ */
+
+@media (min-width: 1024px) {
+    .lp-hero {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 40px;
+        padding-top: 64px;
+        padding-bottom: 96px;
+        min-height: calc(100dvh - 70px);
+    }
+
+    .lp-hero-art { min-height: 580px; }
+
+    .lp-section { padding-top: 80px; padding-bottom: 80px; }
+
+    .lp-install { grid-template-columns: 1fr 1fr; }
+
+    .lp-final { padding: 72px 24px; }
+}

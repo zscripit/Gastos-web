@@ -1,0 +1,64 @@
+@page "/login"
+@layout AuthLayout
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Iniciar sesión · Gastos</PageTitle>
+
+<div class="auth-mark"><Icon Name="coins" Size="24" /></div>
+<h1 class="auth-title">Gastos</h1>
+<p class="auth-subtitle">Tus tarjetas, tus meses sin intereses y tus servicios, en un solo lugar.</p>
+
+<EditForm Model="_model" OnValidSubmit="SubmitAsync" FormName="login">
+    <DataAnnotationsValidator />
+
+    <Alert Message="@_error" />
+
+    <label class="field">
+        <span class="field-label">Correo</span>
+        <InputText @bind-Value="_model.Email" class="input" type="email"
+                   autocomplete="email" inputmode="email" placeholder="tu@correo.com" />
+        <ValidationMessage For="() => _model.Email" />
+    </label>
+
+    <label class="field">
+        <span class="field-label">Contraseña</span>
+        <InputText @bind-Value="_model.Password" class="input" type="password"
+                   autocomplete="current-password" placeholder="••••••••" />
+        <ValidationMessage For="() => _model.Password" />
+    </label>
+
+    <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+        @(_busy ? "Entrando…" : "Entrar")
+    </button>
+</EditForm>
+
+<p class="auth-footer">
+    ¿Todavía no tienes cuenta? <a href="registro">Crear una</a>
+</p>
+
+@code {
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private readonly LoginRequest _model = new();
+    private string? _error;
+    private bool _busy;
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Auth.LoginAsync(_model);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _error = result.Error;
+            return;
+        }
+
+        Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "inicio" : ReturnUrl, replace: true);
+    }
+}

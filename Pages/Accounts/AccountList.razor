@@ -1,0 +1,103 @@
+@page "/cuentas"
+@attribute [Authorize]
+@inject AccountService Accounts
+
+<PageTitle>Cuentas · Gastos</PageTitle>
+
+<header class="page-header page-header-actions">
+    <div>
+        <h1>Cuentas</h1>
+        <p class="page-subtitle">Incluye las archivadas</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="cuentas/nueva"><Icon Name="plus" Size="16" /> Nueva</a>
+</header>
+
+@if (_loading)
+{
+    <div class="list"><Skeleton Variant="row" Count="4" /></div>
+}
+else if (_error is not null)
+{
+    <Alert Message="@_error" />
+}
+else if (_accounts.Count == 0)
+{
+    <EmptyState Title="Aún no registras cuentas"
+                Description="Empieza con la cuenta donde recibes tu nómina o con tu tarjeta principal.">
+        <a class="btn btn-primary" href="cuentas/nueva">Agregar cuenta</a>
+    </EmptyState>
+}
+else
+{
+    <ul class="list">
+        @foreach (var account in _accounts)
+        {
+            <li class="list-item @(account.IsArchived ? "is-archived" : null)">
+                <div class="list-lead">
+                    <span class="glyph">
+                        @if (!string.IsNullOrWhiteSpace(account.BankIconUrl))
+                        {
+                            <img src="@account.BankIconUrl" alt="" loading="lazy" />
+                        }
+                        else
+                        {
+                            @Initials(account.BankName)
+                        }
+                    </span>
+                    <div>
+                        <p class="list-title">@account.Name</p>
+                        <p class="list-subtitle">@account.BankName</p>
+                        @if (!string.IsNullOrWhiteSpace(account.Description))
+                        {
+                            <p class="list-note">@account.Description</p>
+                        }
+                    </div>
+                </div>
+                <div class="list-actions">
+                    @if (account.IsArchived)
+                    {
+                        <span class="badge badge-neutral">Archivada</span>
+                    }
+                    <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/editar")">Editar</a>
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<FinanceAccountListItem> _accounts = [];
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant()
+        };
+    }
+
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Accounts.GetAllAsync();
+
+        if (result.Success)
+        {
+            _accounts = (result.Data ?? [])
+                .OrderBy(a => a.IsArchived)
+                .ThenBy(a => a.Name)
+                .ToList();
+        }
+        else
+        {
+            _error = result.Error;
+        }
+
+        _loading = false;
+    }
+}

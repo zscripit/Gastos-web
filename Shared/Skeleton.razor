@@ -1,0 +1,13 @@
+@* Marcador de carga con la forma del contenido que va a llegar, para que la
+   pantalla no dé un salto cuando lleguen los datos. *@
+
+@for (var i = 0; i < Count; i++)
+{
+    <div class="skeleton skeleton-@Variant"></div>
+}
+
+@code {
+    /// <summary>card | row</summary>
+    [Parameter] public string Variant { get; set; } = "row";
+    [Parameter] public int Count { get; set; } = 3;
+}

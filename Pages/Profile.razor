@@ -1,0 +1,33 @@
+@page "/perfil"
+@attribute [Authorize]
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Perfil · Gastos</PageTitle>
+
+<header class="page-header">
+    <h1>Perfil</h1>
+</header>
+
+<AuthorizeView>
+    <Authorized Context="auth">
+        <ul class="list">
+            <li class="list-item">
+                <div>
+                    <p class="list-subtitle">Correo</p>
+                    <p class="list-title">@(auth.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "—")</p>
+                </div>
+            </li>
+        </ul>
+    </Authorized>
+</AuthorizeView>
+
+<button class="btn btn-secondary btn-block" type="button" @onclick="LogoutAsync">Cerrar sesión</button>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("login", replace: true);
+    }
+}

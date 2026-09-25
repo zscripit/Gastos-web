@@ -1,0 +1,59 @@
+@* Anillo del ciclo de facturación: qué tanto avanzó el periodo entre el corte
+   y la fecha límite de pago, con los días restantes en el centro. *@
+
+<div class="cycle-ring @Tone" role="img" aria-label="@AriaLabel">
+    <svg width="58" height="58" viewBox="0 0 58 58">
+        <circle class="ring-track" cx="29" cy="29" r="@Radius" />
+        <circle class="ring-value" cx="29" cy="29" r="@Radius"
+                stroke-dasharray="@Circumference.ToString("0.##", Invariant)"
+                stroke-dashoffset="@Offset.ToString("0.##", Invariant)" />
+    </svg>
+    <span class="cycle-ring-label">
+        <span>
+            <span class="cycle-ring-days">@DisplayNumber</span><br />
+            <span class="cycle-ring-unit">@DisplayUnit</span>
+        </span>
+    </span>
+</div>
+
+@code {
+    [Parameter] public double Progress { get; set; }
+    [Parameter] public int? DaysRemaining { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Invariant =
+        System.Globalization.CultureInfo.InvariantCulture;
+
+    private const double Radius = 25;
+    private static double Circumference => 2 * Math.PI * Radius;
+    private double Offset => Circumference * (1 - Math.Clamp(Progress, 0, 1));
+
+    private string DisplayNumber => DaysRemaining is null
+        ? "—"
+        : Math.Abs(DaysRemaining.Value).ToString();
+
+    // En vencidas se muestran los días de retraso: cabe en el anillo y dice
+    // más que una advertencia genérica.
+    private string DisplayUnit => DaysRemaining switch
+    {
+        null => "s/f",
+        < 0 => "tarde",
+        1 => "día",
+        _ => "días"
+    };
+
+    private string Tone => DaysRemaining switch
+    {
+        null => string.Empty,
+        < 0 => "is-danger",
+        <= 3 => "is-warning",
+        _ => string.Empty
+    };
+
+    private string AriaLabel => DaysRemaining switch
+    {
+        null => "Sin fecha de pago registrada",
+        < 0 => "Fecha de pago vencida",
+        0 => "La fecha de pago es hoy",
+        var d => $"Faltan {d} días para la fecha de pago"
+    };
+}

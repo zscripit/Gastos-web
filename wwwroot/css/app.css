@@ -1,0 +1,1018 @@
+/* ===========================================================================
+   Gastos — sistema de diseño móvil.
+
+   Lenguaje visual: una sola base casi negra sobre la que todas las superficies
+   son capas translúcidas de blanco, con bordes de un píxel y un relieve hecho
+   con sombras interiores. El color se reserva para el estado (pago vencido,
+   próximo), nunca para decorar: así la pantalla se lee de un vistazo.
+
+   Mobile-first: el layout base es el del teléfono (barra inferior, una
+   columna) y va ganando registros al ensanchar, hasta la barra lateral fija
+   y el tablero a dos columnas en escritorio. Ver el bloque Responsivo al final.
+   =========================================================================== */
+
+:root {
+    color-scheme: dark;
+
+    /* --- Base y superficies ---
+       Las superficies son blanco translúcido sobre la base, no colores
+       sólidos: así comparten la misma luz y se ven talladas del mismo bloque. */
+    --bg: oklch(0.19 0.0025 160);
+    --bg-deep: oklch(0.16 0.0025 160);
+    --surface: rgba(255, 255, 255, 0.033);
+    --surface-hover: rgba(255, 255, 255, 0.055);
+    --surface-strong: rgba(255, 255, 255, 0.08);
+    --recessed: rgba(0, 0, 0, 0.12);
+
+    --border: rgba(255, 255, 255, 0.075);
+    --border-strong: rgba(255, 255, 255, 0.135);
+
+    --text: oklch(0.95 0.00275 160);
+    --text-muted: oklch(0.72 0.004 160);
+    --text-subtle: oklch(0.58 0.004 160);
+
+    /* Un solo acento. Cambiar el tono aquí recolorea toda la app. */
+    --accent: oklch(0.72 0.15 165);
+    --accent-dim: oklch(0.72 0.15 165 / 0.15);
+    --accent-contrast: oklch(0.18 0.03 165);
+
+    --danger: oklch(0.65 0.18 25);
+    --danger-dim: oklch(0.65 0.18 25 / 0.16);
+    --warning: oklch(0.8 0.14 75);
+    --warning-dim: oklch(0.8 0.14 75 / 0.16);
+
+    /* --- Relieve ---
+       Una línea clara arriba y una oscura abajo simulan una superficie
+       ligeramente levantada; es lo que evita que las tarjetas se vean planas. */
+    --bevel:
+        0 1px 3px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+
+    --bevel-lifted:
+        0 4px 16px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-sm: 7px;
+    --gutter: 16px;
+    --tabbar-height: 62px;
+    --hairline: 0.8px;
+
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-heading: "Manrope", var(--font);
+
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    /* Inter variable: 450 lee mejor que 400 sobre fondo oscuro. */
+    font-weight: 450;
+    font-feature-settings: "cv05" 1, "ss03" 1;
+}
+
+h1, h2, h3, p, dl, dd { margin: 0; }
+
+h1, h2, h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
+}
+
+ul { margin: 0; padding: 0; list-style: none; }
+a { color: var(--accent); text-decoration: none; }
+
+/* Números tabulares: las cantidades alineadas en columna no bailan. */
+.numeric, .credit-card-meta dd, .stat-value {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+/* --- Estructura --------------------------------------------------------- */
+
+.app-shell {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    /* Un halo tenue del acento detrás del contenido: da profundidad sin color. */
+    background:
+        radial-gradient(120% 60% at 50% 0%, oklch(0.72 0.15 165 / 0.05), transparent 70%),
+        var(--bg);
+}
+
+.app-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.app-content {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 22px) var(--gutter)
+             calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 28px);
+    animation: page-in 0.24s var(--ease) both;
+}
+
+@keyframes page-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.page-header { margin-bottom: 22px; }
+
+.page-header h1 {
+    font-size: 1.7rem;
+    font-weight: 600;
+}
+
+.page-header-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 2px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    transition: color 0.15s var(--ease);
+}
+
+.back-link:hover { color: var(--text); }
+
+.section { margin-bottom: 30px; }
+
+/* Micro-etiqueta en versalitas: jerarquía sin recurrir al color. */
+.section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-subtle);
+    margin-bottom: 12px;
+}
+
+.screen-center {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+}
+
+/* --- Navegación ---------------------------------------------------------
+   En teléfono es una barra inferior fija al alcance del pulgar; a partir de
+   1024px el mismo marcado se convierte en barra lateral. */
+
+.nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    height: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-top: var(--hairline) solid var(--border);
+}
+
+/* La marca y el botón de salir sólo tienen sitio en la barra lateral. */
+.nav-brand, .nav-footer { display: none; }
+
+.nav-items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: 100%;
+}
+
+.tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--text-subtle);
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.18s var(--ease), background 0.18s var(--ease);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tab-icon {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+}
+
+.tab-icon svg { width: 20px; height: 20px; }
+.tab.active { color: var(--text); }
+
+/* Marca de pestaña activa: una barra corta arriba, como una pestaña física. */
+.tab.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 26px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+}
+
+/* --- Superficie base ---------------------------------------------------- */
+
+.surface {
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--bevel);
+}
+
+/* --- Listas ------------------------------------------------------------- */
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+
+.list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 14px;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--bevel);
+    transition: background 0.16s var(--ease);
+}
+
+.list-item:hover { background: var(--surface-hover); }
+.list-item.is-archived { opacity: 0.45; }
+
+.list-title { font-weight: 550; font-size: 0.95rem; }
+.list-subtitle { color: var(--text-muted); font-size: 0.8rem; }
+.list-note { color: var(--text-subtle); font-size: 0.78rem; margin-top: 2px; }
+
+.list-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Avatar/glifo del banco al inicio de cada fila. */
+.list-lead {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.glyph {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--surface-strong);
+    border: var(--hairline) solid var(--border);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+}
+
+.glyph img { width: 20px; height: 20px; object-fit: contain; }
+
+/* --- Tarjeta de crédito ------------------------------------------------- */
+
+.card-list { display: flex; flex-direction: column; gap: 12px; }
+
+.credit-card {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    border: var(--hairline) solid var(--border);
+    background:
+        radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.06), transparent 60%),
+        var(--surface);
+    box-shadow: var(--bevel);
+    color: var(--text);
+    transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+
+.credit-card:active { transform: scale(0.988); }
+.credit-card:hover { box-shadow: var(--bevel-lifted); }
+
+.credit-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.credit-card-bank {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-subtle);
+}
+
+.credit-card-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.credit-card-name {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.credit-card-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: var(--hairline) solid var(--border);
+}
+
+.credit-card-meta dt {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+    margin-bottom: 3px;
+}
+
+.credit-card-meta dd { font-weight: 550; font-size: 0.92rem; }
+
+/* --- Anillo del ciclo ---------------------------------------------------
+   Muestra qué tanto avanzó el periodo entre el corte y la fecha de pago.
+   Es dato real que ya devuelve la API, no una estimación de saldo. */
+
+.cycle-ring {
+    flex-shrink: 0;
+    position: relative;
+    width: 58px;
+    height: 58px;
+}
+
+.cycle-ring svg { transform: rotate(-90deg); }
+.cycle-ring circle { fill: none; stroke-width: 4; }
+.cycle-ring .ring-track { stroke: rgba(255, 255, 255, 0.08); }
+
+.cycle-ring .ring-value {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s var(--ease);
+}
+
+.cycle-ring.is-warning .ring-value { stroke: var(--warning); }
+.cycle-ring.is-danger .ring-value { stroke: var(--danger); }
+
+.cycle-ring-label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.cycle-ring-days {
+    font-size: 1.05rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.cycle-ring-unit {
+    font-size: 0.55rem;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+}
+
+/* --- Insignias ---------------------------------------------------------- */
+
+.badge {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 550;
+    white-space: nowrap;
+    border: var(--hairline) solid transparent;
+}
+
+.badge-neutral {
+    background: var(--surface-strong);
+    color: var(--text-muted);
+    border-color: var(--border);
+}
+
+.badge-warning { background: var(--warning-dim); color: var(--warning); }
+.badge-danger  { background: var(--danger-dim);  color: var(--danger); }
+.badge-accent  { background: var(--accent-dim);  color: var(--accent); }
+
+/* --- Formularios -------------------------------------------------------- */
+
+.field { display: block; margin-bottom: 16px; }
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.field-inline {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 14px;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+}
+
+.field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 550;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 450;
+    color: var(--text-subtle);
+    margin-top: 5px;
+}
+
+/* Los campos van hundidos (fondo más oscuro que la superficie), al revés
+   que los botones: se distingue al tacto qué recibe texto y qué se pulsa. */
+.input {
+    width: 100%;
+    /* 16px evita que iOS haga zoom al enfocar el campo. */
+    font-size: 16px;
+    font-family: inherit;
+    font-weight: 450;
+    color: var(--text);
+    background: var(--recessed);
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.input::placeholder { color: var(--text-subtle); }
+
+.input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+select.input {
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                      linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 17px) center, calc(100% - 12px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 34px;
+}
+
+.checkbox { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 1px; }
+
+.validation-message {
+    display: block;
+    color: var(--danger);
+    font-size: 0.78rem;
+    margin-top: 5px;
+}
+
+.inline-form {
+    padding: 16px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--bevel);
+    animation: page-in 0.2s var(--ease) both;
+}
+
+.hint-block {
+    margin-top: 20px;
+    color: var(--text-subtle);
+    font-size: 0.85rem;
+}
+
+/* --- Botones ------------------------------------------------------------ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    /* 44px: objetivo tactil minimo comodo en telefono. Supabase usa 26px,
+       pero eso funciona con raton, no con el pulgar. */
+    min-height: 44px;
+    padding: 0 18px;
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 550;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: var(--bevel);
+    transition: background 0.15s var(--ease), transform 0.12s var(--ease), opacity 0.15s var(--ease);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active { transform: scale(0.985); }
+.btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-color: transparent;
+    font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) { background: oklch(0.76 0.15 165); }
+
+.btn-secondary { background: var(--surface); color: var(--text); }
+.btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
+
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) { background: var(--surface); color: var(--text); }
+
+.btn-block { width: 100%; margin-top: 10px; }
+.btn-sm { min-height: 36px; padding: 0 13px; font-size: 0.82rem; }
+
+/* --- Estados ------------------------------------------------------------ */
+
+.alert {
+    padding: 11px 13px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    border: var(--hairline) solid transparent;
+    animation: page-in 0.2s var(--ease) both;
+}
+
+.alert-error   { background: var(--danger-dim);  color: var(--danger);  border-color: oklch(0.65 0.18 25 / 0.3); }
+.alert-success { background: var(--accent-dim);  color: var(--accent);  border-color: oklch(0.72 0.15 165 / 0.3); }
+.alert-info    { background: var(--surface);     color: var(--text-muted); border-color: var(--border); }
+
+.empty-state {
+    padding: 30px 20px;
+    text-align: center;
+    background: var(--surface);
+    border: var(--hairline) dashed var(--border-strong);
+    border-radius: var(--radius);
+}
+
+.empty-title { font-weight: 550; }
+
+.empty-description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 6px auto 16px;
+    max-width: 34ch;
+}
+
+/* --- Esqueletos de carga ---
+   Reservan el espacio real del contenido, así la pantalla no salta cuando
+   llegan los datos. Sustituyen al spinner en las listas. */
+
+.skeleton {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 37%, var(--surface) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+    from { background-position: 100% 0; }
+    to   { background-position: -100% 0; }
+}
+
+.skeleton-card {
+    height: 132px;
+    border-radius: var(--radius-lg);
+    border: var(--hairline) solid var(--border);
+}
+
+.skeleton-row {
+    height: 64px;
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+}
+
+.loading-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding: 24px 0;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .spinner { animation: spin 2s linear infinite !important; }
+}
+
+/* --- Pantallas de sesión ------------------------------------------------ */
+
+.auth-shell {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: calc(env(safe-area-inset-top) + 24px) var(--gutter)
+             calc(env(safe-area-inset-bottom) + 24px);
+    background:
+        radial-gradient(90% 50% at 50% 0%, oklch(0.72 0.15 165 / 0.07), transparent 65%),
+        var(--bg);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    animation: page-in 0.3s var(--ease) both;
+}
+
+.auth-mark {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    background: var(--surface-strong);
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow: var(--bevel);
+    color: var(--accent);
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin: 7px 0 28px;
+}
+
+.auth-footer {
+    margin-top: 22px;
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: 0.85rem;
+}
+
+/* --- Segmentado (débito / crédito) -------------------------------------- */
+
+.segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 22px;
+    background: var(--recessed);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius);
+}
+
+.segment {
+    min-height: 38px;
+    border: var(--hairline) solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-subtle);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 550;
+    cursor: pointer;
+    transition: all 0.16s var(--ease);
+}
+
+.segment.is-active {
+    background: var(--surface-strong);
+    border-color: var(--border);
+    color: var(--text);
+    box-shadow: var(--bevel);
+}
+
+/* --- Arranque y errores del framework ----------------------------------- */
+
+.loading-progress {
+    position: fixed;
+    display: block;
+    width: 6rem;
+    height: 6rem;
+    top: calc(50% - 3rem);
+    left: calc(50% - 3rem);
+}
+
+.loading-progress circle {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 0.4rem;
+    transform-origin: 50% 50%;
+    transform: rotate(-90deg);
+}
+
+.loading-progress circle:last-child {
+    stroke: oklch(0.72 0.15 165);
+    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+    transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: 550;
+    font-size: 0.85rem;
+    inset: calc(50% - 0.6rem) 0 auto 0;
+    color: oklch(0.72 0.004 160);
+}
+
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Cargando");
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1000;
+    padding: 14px var(--gutter);
+    background: oklch(0.8 0.14 75);
+    color: #16180f;
+    font-weight: 500;
+    text-align: center;
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    cursor: pointer;
+}
+
+/* ===========================================================================
+   Responsivo
+
+   Tres registros, no dos: teléfono (columna, barra inferior), tableta
+   (columna más ancha, tarjetas en rejilla) y escritorio (barra lateral fija y
+   tablero a dos columnas). El contenido tiene un ancho máximo en todos: una
+   línea de texto de 1600px no se lee, por mucho monitor que haya.
+   =========================================================================== */
+
+/* --- Tableta: hay ancho para poner tarjetas lado a lado ----------------- */
+
+@media (min-width: 640px) {
+    .app-content {
+        max-width: 660px;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .card-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 14px;
+    }
+
+    .page-header h1 { font-size: 1.9rem; }
+}
+
+/* --- Escritorio: barra lateral y tablero -------------------------------- */
+
+@media (min-width: 1024px) {
+    :root { --sidebar-width: 236px; }
+
+    .app-shell { flex-direction: row; }
+
+    /* La barra deja de flotar sobre el contenido y pasa a ocupar su columna. */
+    .nav {
+        position: sticky;
+        top: 0;
+        inset: auto;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        width: var(--sidebar-width);
+        height: 100dvh;
+        padding: 20px 12px;
+        background: color-mix(in srgb, var(--bg-deep) 60%, transparent);
+        border-top: none;
+        border-right: var(--hairline) solid var(--border);
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 10px 22px;
+    }
+
+    .nav-brand-mark {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: var(--surface-strong);
+        border: var(--hairline) solid var(--border);
+        box-shadow: var(--bevel);
+        color: var(--accent);
+    }
+
+    .nav-brand-name {
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    .nav-items {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        height: auto;
+    }
+
+    /* De columna apretada a fila cómoda: icono y etiqueta en línea. */
+    .tab {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 11px;
+        padding: 9px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .tab:hover { background: var(--surface); color: var(--text); }
+
+    .tab.active {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: var(--bevel);
+    }
+
+    /* En vertical la marca de activo es una barra a la izquierda. */
+    .tab.active::before {
+        top: 50%;
+        left: 0;
+        width: 2px;
+        height: 18px;
+        transform: translateY(-50%);
+        border-radius: 0 2px 2px 0;
+    }
+
+    .nav-footer {
+        display: block;
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: var(--hairline) solid var(--border);
+    }
+
+    .nav-signout {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        width: 100%;
+        padding: 9px 10px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text-subtle);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s var(--ease), color 0.15s var(--ease);
+    }
+
+    .nav-signout:hover { background: var(--surface); color: var(--text); }
+
+    .app-main {
+        display: flex;
+        justify-content: center;
+        overflow-x: hidden;
+    }
+
+    .app-content {
+        max-width: 1040px;
+        /* Sin barra inferior ya no hace falta reservar espacio abajo. */
+        padding: 36px 32px 48px;
+    }
+
+    .page-header { margin-bottom: 26px; }
+    .page-header h1 { font-size: 2rem; }
+
+    /* Los formularios no se estiran: un campo de 900px es incómodo de leer
+       y de llenar, aunque quepa. */
+    .app-content form,
+    .inline-form,
+    .segmented,
+    .hint-block { max-width: 580px; }
+
+    .card-list { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+    /* Las listas tambien aprovechan el ancho en vez de dejar medio monitor vacio. */
+    .list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        gap: 10px;
+    }
+}
+
+/* --- Tablero a dos columnas (sólo donde hay sitio de sobra) ------------- */
+
+@media (min-width: 1160px) {
+    .dashboard {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        gap: 32px;
+        align-items: start;
+    }
+
+    .dashboard .section { margin-bottom: 0; }
+    .dashboard .card-list,
+    .dashboard .list { grid-template-columns: 1fr; }
+}
+
+/* --- Pantallas muy anchas ----------------------------------------------- */
+
+@media (min-width: 1500px) {
+    .app-content { max-width: 1180px; }
+    .dashboard .card-list { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+}

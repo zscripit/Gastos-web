@@ -1,0 +1,77 @@
+@page "/cuentas/{AccountId:guid}/tarjeta"
+@attribute [Authorize]
+@inject AccountService Accounts
+@inject CatalogService Catalog
+@inject NavigationManager Nav
+
+<PageTitle>Tarjeta · Gastos</PageTitle>
+
+<header class="page-header">
+    <a class="back-link" href="inicio">← Resumen</a>
+    <h1>Tarjeta de crédito</h1>
+</header>
+
+@if (_loading)
+{
+    <LoadingBlock />
+}
+else if (_notFound)
+{
+    <Alert Message="No se encontró la tarjeta, o la cuenta no es de crédito." />
+}
+else
+{
+    <CreditAccountForm Model="_model" Banks="_banks" Busy="_busy" Error="@_error"
+                       SubmitText="Guardar cambios" OnValidSubmit="SaveAsync" />
+}
+
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+
+    private readonly SaveCreditAccountRequest _model = new();
+    private IReadOnlyList<BankDto> _banks = [];
+    private bool _loading = true;
+    private bool _busy;
+    private bool _notFound;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _banks = await Catalog.GetActiveBanksAsync();
+
+        // /FinanceAccount/Active ya devuelve los datos de crédito de cada tarjeta,
+        // así que sirve como origen del formulario sin un GET dedicado.
+        var active = await Accounts.GetActiveAsync();
+        var card = (active.Data ?? []).FirstOrDefault(a => a.Id == AccountId && a.IsCredit);
+
+        if (card is null)
+        {
+            _notFound = true;
+        }
+        else
+        {
+            _model.Name = card.Name;
+            _model.Description = card.Description;
+            _model.BankId = _banks.FirstOrDefault(b => b.Name == card.BankName)?.Id;
+            _model.CreditLimit = card.CreditLimit;
+            _model.InterestRate = card.InterestRate;
+            _model.CutDate = card.CutDate?.DateTime.Date;
+            _model.PayDate = card.PayDate?.DateTime.Date;
+        }
+
+        _loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Accounts.EditCreditAsync(AccountId, _model);
+
+        _busy = false;
+
+        if (result.Success) Nav.NavigateTo("inicio");
+        else _error = result.Error;
+    }
+}

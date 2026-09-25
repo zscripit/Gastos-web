@@ -1,0 +1,83 @@
+@page "/registro"
+@layout AuthLayout
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Crear cuenta · Gastos</PageTitle>
+
+<div class="auth-mark"><Icon Name="user" Size="24" /></div>
+<h1 class="auth-title">Crear cuenta</h1>
+<p class="auth-subtitle">Tus datos son privados: nadie más ve tus finanzas.</p>
+
+<EditForm Model="_model" OnValidSubmit="SubmitAsync" FormName="register">
+    <DataAnnotationsValidator />
+
+    <Alert Message="@_error" />
+
+    <label class="field">
+        <span class="field-label">Nombre</span>
+        <InputText @bind-Value="_model.FirstName" class="input" autocomplete="given-name" />
+        <ValidationMessage For="() => _model.FirstName" />
+    </label>
+
+    <label class="field">
+        <span class="field-label">Segundo nombre <span class="field-hint">(opcional)</span></span>
+        <InputText @bind-Value="_model.MiddleName" class="input" autocomplete="additional-name" />
+    </label>
+
+    <label class="field">
+        <span class="field-label">Apellidos</span>
+        <InputText @bind-Value="_model.LastName" class="input" autocomplete="family-name" />
+        <ValidationMessage For="() => _model.LastName" />
+    </label>
+
+    <label class="field">
+        <span class="field-label">Correo</span>
+        <InputText @bind-Value="_model.Email" class="input" type="email"
+                   autocomplete="email" inputmode="email" />
+        <ValidationMessage For="() => _model.Email" />
+    </label>
+
+    <label class="field">
+        <span class="field-label">Contraseña</span>
+        <InputText @bind-Value="_model.Password" class="input" type="password" autocomplete="new-password" />
+        <span class="field-hint">Mínimo 8 caracteres, con mayúscula, minúscula y un número.</span>
+        <ValidationMessage For="() => _model.Password" />
+    </label>
+
+    <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+        @(_busy ? "Creando…" : "Crear cuenta")
+    </button>
+</EditForm>
+
+<p class="auth-footer">
+    ¿Ya tienes cuenta? <a href="login">Iniciar sesión</a>
+</p>
+
+@code {
+    private readonly RegisterRequest _model = new();
+    private string? _error;
+    private bool _busy;
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Auth.RegisterAsync(_model);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            // La API agrupa los errores de Identity por campo; se muestran juntos
+            // porque no coinciden uno a uno con el formulario.
+            _error = result.ValidationErrors.Count > 0
+                ? string.Join(" ", result.ValidationErrors.SelectMany(e => e.Value))
+                : result.Error;
+            return;
+        }
+
+        Nav.NavigateTo("inicio", replace: true);
+    }
+}

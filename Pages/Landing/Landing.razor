@@ -1,0 +1,334 @@
+@page "/"
+@layout LandingLayout
+@inject NavigationManager Nav
+
+<PageTitle>Gastos · Tus tarjetas, cada una en su lugar</PageTitle>
+
+@* Punto de entrada público. Quien ya tiene sesión no necesita que le vendan
+   la app: se le manda directo a su resumen (también cubre abrir la PWA
+   instalada, que arranca en la raíz). *@
+
+<header class="lp-topbar">
+    <a class="lp-brand" href="">
+        <span class="lp-brand-mark"><Icon Name="coins" Size="18" /></span>
+        <span>Gastos</span>
+    </a>
+    <nav class="lp-topbar-actions">
+        <a class="btn btn-ghost btn-sm" href="login">Entrar</a>
+        <a class="btn btn-primary btn-sm" href="registro">Crear cuenta</a>
+    </nav>
+</header>
+
+<main>
+    @* --- Hero --- *@
+    <section class="lp-hero">
+        <div class="lp-hero-copy">
+            <span class="lp-eyebrow">
+                <span class="lp-eyebrow-dot"></span>
+                App web instalable · móvil y escritorio
+            </span>
+
+            <h1 class="lp-title">
+                Tus tarjetas de crédito,
+                <span class="lp-title-accent">cada una en su lugar.</span>
+            </h1>
+
+            <p class="lp-lead">
+                Deja el Excel. Lleva el corte, la fecha de pago y los meses sin
+                intereses de cada tarjeta por separado, y entérate a tiempo de lo
+                que se viene.
+            </p>
+
+            <div class="lp-cta">
+                <a class="btn btn-primary lp-btn-lg" href="registro">Empezar gratis</a>
+                <a class="btn btn-secondary lp-btn-lg" href="login">Ya tengo cuenta</a>
+            </div>
+
+            <ul class="lp-proof">
+                <li><Icon Name="check" Size="15" /> Sin tarjeta ni pago</li>
+                <li><Icon Name="check" Size="15" /> Tus datos sólo los ves tú</li>
+            </ul>
+        </div>
+
+        <div class="lp-hero-art" aria-hidden="true">
+            <div class="lp-glow"></div>
+
+            @* El teléfono se arma con los mismos componentes de la app. *@
+            <div class="lp-phone">
+                <div class="lp-phone-notch"></div>
+                <div class="lp-phone-screen">
+                    <p class="lp-phone-title">Resumen</p>
+                    <p class="lp-phone-sub">Próximos pagos</p>
+
+                    <div class="credit-card lp-mini-card">
+                        <div class="credit-card-head">
+                            <span class="credit-card-bank"><Icon Name="card" Size="12" /> Oro</span>
+                            <span class="badge badge-warning">En 2 días</span>
+                        </div>
+                        <div class="credit-card-body">
+                            <div>
+                                <p class="credit-card-name">Tarjeta Oro</p>
+                                <p class="list-subtitle">Límite $50,000</p>
+                            </div>
+                            <CycleRing Progress="0.82" DaysRemaining="2" />
+                        </div>
+                    </div>
+
+                    <div class="credit-card lp-mini-card">
+                        <div class="credit-card-head">
+                            <span class="credit-card-bank"><Icon Name="card" Size="12" /> Platino</span>
+                            <span class="badge badge-neutral">En 18 días</span>
+                        </div>
+                        <div class="credit-card-body">
+                            <div>
+                                <p class="credit-card-name">Platino</p>
+                                <p class="list-subtitle">Límite $35,000</p>
+                            </div>
+                            <CycleRing Progress="0.12" DaysRemaining="18" />
+                        </div>
+                    </div>
+
+                    <div class="lp-phone-tabbar">
+                        <span class="is-active"><Icon Name="home" Size="16" /></span>
+                        <span><Icon Name="wallet" Size="16" /></span>
+                        <span><Icon Name="tag" Size="16" /></span>
+                        <span><Icon Name="user" Size="16" /></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lp-chip lp-chip-top">
+                <span class="lp-chip-icon is-warning"><Icon Name="bell" Size="15" /></span>
+                <span>
+                    <strong>Pago de Tarjeta Oro</strong>
+                    <small>Vence en 2 días</small>
+                </span>
+            </div>
+
+            <div class="lp-chip lp-chip-bottom">
+                <span class="lp-chip-icon"><Icon Name="calendar" Size="15" /></span>
+                <span>
+                    <strong>Laptop a 12 MSI</strong>
+                    <small class="lp-chip-progress"><i style="width:33%"></i></small>
+                    <small>4 de 12 pagadas</small>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    @* --- Problema --- *@
+    <section class="lp-section lp-problem">
+        <p class="lp-kicker">El problema</p>
+        <h2 class="lp-h2">Una hoja de cálculo no te avisa de nada.</h2>
+        <div class="lp-problem-grid">
+            <div class="lp-problem-item">
+                <span class="lp-problem-num">01</span>
+                <p>Con varias tarjetas pierdes de vista el estado de cada una.</p>
+            </div>
+            <div class="lp-problem-item">
+                <span class="lp-problem-num">02</span>
+                <p>Las cuotas de meses sin intereses se pierden entre los demás movimientos.</p>
+            </div>
+            <div class="lp-problem-item">
+                <span class="lp-problem-num">03</span>
+                <p>Un pago olvidado significa intereses que no tenías por qué pagar.</p>
+            </div>
+        </div>
+    </section>
+
+    @* --- Funciones --- *@
+    <section class="lp-section" id="funciones">
+        <p class="lp-kicker">Qué hace</p>
+        <h2 class="lp-h2">Pensada para quien maneja más de una tarjeta.</h2>
+
+        <div class="lp-features">
+            <article class="lp-feature">
+                <div class="lp-illustration">
+                    <svg viewBox="0 0 280 150" role="img" aria-label="Tres tarjetas separadas, cada una con su anillo de ciclo">
+                        <g transform="rotate(-8 90 80)">
+                            <rect class="ill-surface" x="30" y="40" width="130" height="80" rx="10" />
+                            <circle class="ill-track" cx="132" cy="70" r="13" />
+                        </g>
+                        <g transform="rotate(4 150 80)">
+                            <rect class="ill-surface" x="80" y="34" width="130" height="80" rx="10" />
+                            <circle class="ill-track" cx="182" cy="64" r="13" />
+                            <path class="ill-warning" d="M182 51 a13 13 0 0 1 11 20" />
+                        </g>
+                        <g transform="rotate(12 210 80)">
+                            <rect class="ill-surface ill-front" x="130" y="30" width="130" height="80" rx="10" />
+                            <rect class="ill-bar" x="144" y="46" width="44" height="6" rx="3" />
+                            <rect class="ill-bar-soft" x="144" y="60" width="30" height="5" rx="2.5" />
+                            <circle class="ill-track" cx="232" cy="60" r="13" />
+                            <path class="ill-accent" d="M232 47 a13 13 0 1 1 -12.4 17" />
+                            <rect class="ill-bar-soft" x="144" y="90" width="22" height="5" rx="2.5" />
+                            <rect class="ill-bar-soft" x="178" y="90" width="22" height="5" rx="2.5" />
+                            <rect class="ill-bar-soft" x="212" y="90" width="22" height="5" rx="2.5" />
+                        </g>
+                    </svg>
+                </div>
+                <h3>Cada tarjeta por separado</h3>
+                <p>Límite, tasa, fecha de corte y de pago de cada una, ordenadas por urgencia. Nada de una bolsa común.</p>
+            </article>
+
+            <article class="lp-feature">
+                <div class="lp-illustration">
+                    <svg viewBox="0 0 280 150" role="img" aria-label="Línea de doce cuotas, cuatro pagadas y la actual resaltada">
+                        <line class="ill-line" x1="30" y1="78" x2="250" y2="78" />
+                        <line class="ill-accent-line" x1="30" y1="78" x2="110" y2="78" />
+                        @for (var i = 0; i < 12; i++)
+                        {
+                            var cx = 30 + i * 20;
+                            var cls = i < 4 ? "ill-dot-done" : i == 4 ? "ill-dot-now" : "ill-dot";
+                            <circle class="@cls" cx="@cx" cy="78" r="@(i == 4 ? 7 : 5)" />
+                        }
+                        <rect class="ill-surface" x="92" y="24" width="96" height="34" rx="8" />
+                        <text class="ill-text" x="140" y="38" text-anchor="middle">Este mes</text>
+                        <text class="ill-text-strong" x="140" y="52" text-anchor="middle">$1,250</text>
+                        <text class="ill-text" x="30" y="108">4 de 12 pagadas</text>
+                        <text class="ill-text" x="250" y="108" text-anchor="end">Restan $10,000</text>
+                    </svg>
+                </div>
+                <h3>Meses sin intereses bajo control <span class="badge badge-neutral">Próximamente</span></h3>
+                <p>Cuántas cuotas llevas, cuántas faltan y cuánto debes este mes, sin que se mezclen con el resto.</p>
+            </article>
+
+            <article class="lp-feature">
+                <div class="lp-illustration">
+                    <svg viewBox="0 0 280 150" role="img" aria-label="Calendario con el día de pago resaltado y una notificación">
+                        <rect class="ill-surface" x="40" y="30" width="140" height="104" rx="10" />
+                        <rect class="ill-bar-soft" x="54" y="42" width="48" height="6" rx="3" />
+                        @for (var r = 0; r < 4; r++)
+                        {
+                            for (var c = 0; c < 6; c++)
+                            {
+                                var x = 54 + c * 20;
+                                var y = 60 + r * 17;
+                                var isPay = r == 2 && c == 3;
+                                <rect class="@(isPay ? "ill-day-pay" : "ill-day")" x="@x" y="@y" width="14" height="12" rx="3" />
+                            }
+                        }
+                        <g class="ill-float">
+                            <rect class="ill-surface ill-front" x="150" y="22" width="104" height="40" rx="10" />
+                            <circle class="ill-warning-fill" cx="168" cy="42" r="8" />
+                            <rect class="ill-bar" x="182" y="35" width="56" height="5" rx="2.5" />
+                            <rect class="ill-bar-soft" x="182" y="45" width="38" height="4" rx="2" />
+                        </g>
+                        <path class="ill-line" d="M128 100 C 150 100, 160 80, 168 62" stroke-dasharray="3 4" />
+                    </svg>
+                </div>
+                <h3>Recordatorios de pago <span class="badge badge-neutral">Próximamente</span></h3>
+                <p>Un aviso antes de la fecha límite de cada tarjeta, para que ningún pago se te pase.</p>
+            </article>
+
+            <article class="lp-feature">
+                <div class="lp-illustration">
+                    <svg viewBox="0 0 280 150" role="img" aria-label="Lista de servicios recurrentes con su monto">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            var y = 26 + i * 36;
+                            <rect class="ill-surface @(i == 0 ? "ill-front" : null)" x="40" y="@y" width="200" height="28" rx="8" />
+                            <circle class="@(i == 0 ? "ill-accent-fill" : "ill-dot-soft")" cx="56" cy="@(y + 14)" r="6" />
+                            <rect class="ill-bar" x="70" y="@(y + 9)" width="@(60 - i * 10)" height="5" rx="2.5" />
+                            <rect class="ill-bar-soft" x="70" y="@(y + 18)" width="34" height="4" rx="2" />
+                            <rect class="ill-bar" x="196" y="@(y + 11)" width="30" height="6" rx="3" />
+                        }
+                        <path class="ill-accent" d="M252 50 a18 18 0 1 1 -6 -13" />
+                        <path class="ill-accent" d="M246 30 l1 8 l-8 0" />
+                    </svg>
+                </div>
+                <h3>Servicios recurrentes <span class="badge badge-neutral">Próximamente</span></h3>
+                <p>Internet, agua, luz: todo lo que pagas cada mes, registrado y a la vista.</p>
+            </article>
+        </div>
+    </section>
+
+    @* --- Instalación --- *@
+    <section class="lp-section lp-install">
+        <div class="lp-install-copy">
+            <p class="lp-kicker">Sin tiendas de apps</p>
+            <h2 class="lp-h2">Se instala como una app. Pesa como una web.</h2>
+            <p class="lp-lead">
+                Ábrela en tu navegador y añádela a tu pantalla de inicio. Funciona en
+                Android, iPhone y en tu computadora, con la misma cuenta.
+            </p>
+            <ol class="lp-steps">
+                @* El texto va en su propio <p>: si quedara suelto dentro del <li>
+                   flex, cada <strong> sería un elemento aparte con hueco alrededor. *@
+                <li><span>1</span><p>Abre Gastos en el navegador de tu teléfono.</p></li>
+                <li><span>2</span><p>Toca <strong>Compartir</strong> o el menú <strong>⋮</strong>.</p></li>
+                <li><span>3</span><p>Elige <strong>Añadir a pantalla de inicio</strong>.</p></li>
+            </ol>
+        </div>
+
+        <div class="lp-install-art" aria-hidden="true">
+            <svg viewBox="0 0 320 220">
+                @* Pantalla de inicio de un teléfono con el icono de Gastos entrando. *@
+                <rect class="ill-surface" x="90" y="10" width="140" height="200" rx="22" />
+                @for (var r = 0; r < 3; r++)
+                {
+                    for (var c = 0; c < 3; c++)
+                    {
+                        var x = 108 + c * 38;
+                        var y = 34 + r * 42;
+                        var isApp = r == 2 && c == 1;
+                        if (isApp)
+                        {
+                            <rect class="ill-app" x="@x" y="@y" width="28" height="28" rx="8" />
+                            <circle class="ill-app-mark" cx="@(x + 14)" cy="@(y + 14)" r="6" />
+                        }
+                        else
+                        {
+                            <rect class="ill-day" x="@x" y="@y" width="28" height="28" rx="8" />
+                        }
+                    }
+                }
+                <rect class="ill-surface ill-front" x="112" y="170" width="96" height="24" rx="12" />
+                <rect class="ill-bar" x="126" y="180" width="68" height="5" rx="2.5" />
+                <path class="ill-accent-line" d="M60 120 C 80 120, 100 130, 146 128" stroke-dasharray="4 5" />
+                <circle class="ill-accent-fill" cx="56" cy="120" r="5" />
+            </svg>
+        </div>
+    </section>
+
+    @* --- Privacidad --- *@
+    <section class="lp-section lp-privacy">
+        <div class="lp-privacy-icon"><Icon Name="lock" Size="22" /></div>
+        <div>
+            <h2 class="lp-h3">Tus finanzas son sólo tuyas.</h2>
+            <p>
+                Cada cuenta está aislada: nadie más ve tus tarjetas ni tus movimientos,
+                ni siquiera si comparten la app en casa.
+            </p>
+        </div>
+    </section>
+
+    @* --- Llamada final --- *@
+    <section class="lp-final">
+        <h2 class="lp-h2">Empieza con tu tarjeta principal.</h2>
+        <p class="lp-lead">Toma menos de un minuto.</p>
+        <a class="btn btn-primary lp-btn-lg" href="registro">Crear mi cuenta</a>
+    </section>
+</main>
+
+<footer class="lp-footer">
+    <span class="lp-brand lp-brand-sm">
+        <span class="lp-brand-mark"><Icon Name="coins" Size="14" /></span>
+        <span>Gastos</span>
+    </span>
+    <span>Proyecto de Desarrollo Móvil Integral · IDGS15</span>
+</footer>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null) return;
+
+        var state = await AuthState;
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo("inicio", replace: true);
+        }
+    }
+}

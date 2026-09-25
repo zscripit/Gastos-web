@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gastos-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--launch-profile", "http"],
+      "port": 5025
+    },
+    {
+      "name": "gastos-web-preview",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--no-launch-profile", "--urls", "http://localhost:5035"],
+      "port": 5035
+    }
+  ]
+}

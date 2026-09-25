@@ -1,0 +1,134 @@
+@page "/cuentas/nueva"
+@attribute [Authorize]
+@inject AccountService Accounts
+@inject CatalogService Catalog
+@inject NavigationManager Nav
+
+<PageTitle>Nueva cuenta · Gastos</PageTitle>
+
+<header class="page-header">
+    <a class="back-link" href="cuentas">← Cuentas</a>
+    <h1>Nueva cuenta</h1>
+</header>
+
+<div class="segmented" role="tablist">
+    <button type="button" role="tab" class="segment @(_isCredit ? null : "is-active")"
+            aria-selected="@(!_isCredit)" @onclick="() => _isCredit = false">
+        Débito / ahorro
+    </button>
+    <button type="button" role="tab" class="segment @(_isCredit ? "is-active" : null)"
+            aria-selected="@_isCredit" @onclick="() => _isCredit = true">
+        Tarjeta de crédito
+    </button>
+</div>
+
+@if (_banks is null)
+{
+    <LoadingBlock Text="Cargando bancos…" />
+}
+else if (_banks.Count == 0)
+{
+    <EmptyState Title="No hay bancos en el catálogo"
+                Description="El catálogo de bancos lo administra una cuenta SuperAdmin. Registra al menos uno antes de crear cuentas." />
+}
+else if (!_isCredit)
+{
+    <EditForm Model="_debit" OnValidSubmit="SaveDebitAsync" FormName="new-account">
+        <DataAnnotationsValidator />
+        <Alert Message="@_error" />
+
+        <label class="field">
+            <span class="field-label">Nombre</span>
+            <InputText @bind-Value="_debit.Name" class="input" placeholder="Cuenta débito BBVA" />
+            <span class="field-hint">Entre 8 y 35 caracteres.</span>
+            <ValidationMessage For="() => _debit.Name" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Descripción <span class="field-hint">(opcional)</span></span>
+            <InputTextArea @bind-Value="_debit.Description" class="input" rows="2" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Banco</span>
+            <InputSelect @bind-Value="_debit.BankId" class="input">
+                <option value="">Selecciona…</option>
+                @foreach (var bank in _banks)
+                {
+                    <option value="@bank.Id">@bank.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => _debit.BankId" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Tipo</span>
+            <InputSelect @bind-Value="_debit.AccountType" class="input">
+                <option value="">Selecciona…</option>
+                @foreach (var type in Enum.GetValues<AllowedFinanceAccountType>())
+                {
+                    <option value="@type">@type.DisplayName()</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => _debit.AccountType" />
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+            @(_busy ? "Guardando…" : "Guardar cuenta")
+        </button>
+    </EditForm>
+}
+else
+{
+    <CreditAccountForm Model="_credit" Banks="_banks" Busy="_busy" Error="@_error"
+                       ShowArchiveToggle="false" SubmitText="Guardar tarjeta"
+                       OnValidSubmit="SaveCreditAsync" />
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "tipo")] private string? Tipo { get; set; }
+
+    private readonly AddFinanceAccountRequest _debit = new();
+    private readonly SaveCreditAccountRequest _credit = new();
+    private IReadOnlyList<BankDto>? _banks;
+    private bool _isCredit;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isCredit = string.Equals(Tipo, "credito", StringComparison.OrdinalIgnoreCase);
+        _banks = await Catalog.GetActiveBanksAsync();
+    }
+
+    private async Task SaveDebitAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Accounts.AddAsync(_debit);
+
+        _busy = false;
+
+        if (result.Success) Nav.NavigateTo("cuentas");
+        else _error = Describe(result);
+    }
+
+    private async Task SaveCreditAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Accounts.AddCreditAsync(_credit);
+
+        _busy = false;
+
+        if (result.Success) Nav.NavigateTo("cuentas");
+        else _error = Describe(result);
+    }
+
+    private static string? Describe<T>(ApiResult<T> result) =>
+        result.ValidationErrors.Count > 0
+            ? string.Join(" ", result.ValidationErrors.SelectMany(e => e.Value))
+            : result.Error;
+}

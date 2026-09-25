@@ -1,0 +1,185 @@
+@page "/inicio"
+@attribute [Authorize]
+@inject AccountService Accounts
+
+<PageTitle>Inicio · Gastos</PageTitle>
+
+<header class="page-header">
+    <h1>Resumen</h1>
+    <p class="page-subtitle">@CultureInfo.CurrentCulture.TextInfo.ToTitleCase(DateTime.Now.ToString("dddd d 'de' MMMM"))</p>
+</header>
+
+@if (_loading)
+{
+    <div class="dashboard">
+    <section class="section">
+        <h2 class="section-title">Próximos pagos de tarjeta</h2>
+        <div class="card-list"><Skeleton Variant="card" Count="2" /></div>
+    </section>
+    <section class="section">
+        <h2 class="section-title">Otras cuentas</h2>
+        <div class="list"><Skeleton Variant="row" Count="2" /></div>
+    </section>
+    </div>
+}
+else if (_error is not null)
+{
+    <Alert Message="@_error" />
+}
+else
+{
+    <div class="dashboard">
+    <section class="section">
+        <h2 class="section-title">Próximos pagos de tarjeta</h2>
+
+        @if (_cards.Count == 0)
+        {
+            <EmptyState Title="Sin tarjetas registradas"
+                        Description="Agrega una tarjeta para llevar el control de su corte y su fecha de pago.">
+                <a class="btn btn-primary" href="cuentas/nueva?tipo=credito">
+                    <Icon Name="plus" Size="17" /> Agregar tarjeta
+                </a>
+            </EmptyState>
+        }
+        else
+        {
+            <div class="card-list">
+                @foreach (var card in _cards)
+                {
+                    <a class="credit-card" href="@($"cuentas/{card.Id}/tarjeta")">
+                        <div class="credit-card-head">
+                            <span class="credit-card-bank">
+                                <Icon Name="card" Size="14" />
+                                @card.BankName
+                            </span>
+                            <span class="badge badge-@PaymentTone(card)">@PaymentLabel(card)</span>
+                        </div>
+
+                        <div class="credit-card-body">
+                            <div>
+                                <p class="credit-card-name">@card.Name</p>
+                                <p class="list-subtitle">Límite @card.CreditLimit?.ToString("C0")</p>
+                            </div>
+                            <CycleRing Progress="card.CycleProgress" DaysRemaining="card.DaysUntilPayment" />
+                        </div>
+
+                        <dl class="credit-card-meta">
+                            <div>
+                                <dt>Corte</dt>
+                                <dd>@card.CutDate?.ToString("dd MMM")</dd>
+                            </div>
+                            <div>
+                                <dt>Pago</dt>
+                                <dd>@card.PayDate?.ToString("dd MMM")</dd>
+                            </div>
+                            <div>
+                                <dt>Tasa</dt>
+                                <dd>@card.InterestRate?.ToString("0.#")%</dd>
+                            </div>
+                        </dl>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Otras cuentas</h2>
+
+        @if (_others.Count == 0)
+        {
+            <EmptyState Title="Sin cuentas de débito, ahorro o efectivo"
+                        Description="Regístralas para separar de dónde sale cada gasto.">
+                <a class="btn btn-secondary" href="cuentas/nueva">
+                    <Icon Name="plus" Size="17" /> Agregar cuenta
+                </a>
+            </EmptyState>
+        }
+        else
+        {
+            <ul class="list">
+                @foreach (var account in _others)
+                {
+                    <li class="list-item">
+                        <div class="list-lead">
+                            <span class="glyph">
+                                @if (!string.IsNullOrWhiteSpace(account.BankIconUrl))
+                                {
+                                    <img src="@account.BankIconUrl" alt="" loading="lazy" />
+                                }
+                                else
+                                {
+                                    @Initials(account.BankName)
+                                }
+                            </span>
+                            <div>
+                                <p class="list-title">@account.Name</p>
+                                <p class="list-subtitle">@account.BankName · @account.AccountType.DisplayName()</p>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+    </div>
+}
+
+@code {
+    private List<ActiveAccountDto> _cards = [];
+    private List<ActiveAccountDto> _others = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Accounts.GetActiveAsync();
+
+        if (!result.Success)
+        {
+            _error = result.Error;
+        }
+        else
+        {
+            var accounts = result.Data ?? [];
+            // Las tarjetas se ordenan por urgencia de pago: es la información
+            // que motiva abrir la app.
+            _cards = accounts.Where(a => a.IsCredit)
+                             .OrderBy(a => a.DaysUntilPayment ?? int.MaxValue)
+                             .ToList();
+            _others = accounts.Where(a => !a.IsCredit)
+                              .OrderBy(a => a.Name)
+                              .ToList();
+        }
+
+        _loading = false;
+    }
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant()
+        };
+    }
+
+    private static string PaymentLabel(ActiveAccountDto card) => card.DaysUntilPayment switch
+    {
+        null => "Sin fecha",
+        < 0 => "Vencida",
+        0 => "Paga hoy",
+        1 => "Mañana",
+        var days => $"En {days} días"
+    };
+
+    private static string PaymentTone(ActiveAccountDto card) => card.DaysUntilPayment switch
+    {
+        null => "neutral",
+        < 0 => "danger",
+        <= 3 => "warning",
+        _ => "neutral"
+    };
+}

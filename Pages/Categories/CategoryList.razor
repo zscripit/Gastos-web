@@ -1,0 +1,142 @@
+@page "/categorias"
+@attribute [Authorize]
+@inject CategoryService Categories
+
+<PageTitle>Categorías · Gastos</PageTitle>
+
+<header class="page-header page-header-actions">
+    <div>
+        <h1>Categorías</h1>
+        <p class="page-subtitle">Con las que clasificas cada gasto</p>
+    </div>
+    <button class="btn btn-primary btn-sm" type="button" @onclick="() => _showForm = !_showForm">
+        @(_showForm ? "Cancelar" : "+ Nueva")
+    </button>
+</header>
+
+@if (_showForm)
+{
+    <EditForm Model="_newCategory" OnValidSubmit="AddAsync" FormName="new-category" class="inline-form">
+        <DataAnnotationsValidator />
+        <Alert Message="@_formError" />
+
+        <label class="field">
+            <span class="field-label">Nombre</span>
+            <InputText @bind-Value="_newCategory.Name" class="input" placeholder="Comida" />
+            <ValidationMessage For="() => _newCategory.Name" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Descripción <span class="field-hint">(opcional)</span></span>
+            <InputText @bind-Value="_newCategory.Description" class="input" placeholder="Restaurantes y despensa" />
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+            @(_busy ? "Guardando…" : "Agregar categoría")
+        </button>
+    </EditForm>
+}
+
+@if (_loading)
+{
+    <div class="list"><Skeleton Variant="row" Count="4" /></div>
+}
+else if (_error is not null)
+{
+    <Alert Message="@_error" />
+}
+else if (_categories.Count == 0)
+{
+    <EmptyState Title="Todavía no tienes categorías"
+                Description="Crea las que uses de verdad: comida, transporte, servicios…" />
+}
+else
+{
+    <ul class="list">
+        @foreach (var category in _categories)
+        {
+            <li class="list-item @(category.IsArchived ? "is-archived" : null)">
+                <div>
+                    <p class="list-title">@category.Name</p>
+                    @if (!string.IsNullOrWhiteSpace(category.Description))
+                    {
+                        <p class="list-subtitle">@category.Description</p>
+                    }
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button"
+                        disabled="@(_togglingId == category.Id)"
+                        @onclick="() => ToggleAsync(category)">
+                    @(category.IsArchived ? "Reactivar" : "Archivar")
+                </button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<CategoryDto> _categories = [];
+    private readonly SaveCategoryRequest _newCategory = new();
+    private bool _loading = true;
+    private bool _busy;
+    private bool _showForm;
+    private Guid? _togglingId;
+    private string? _error;
+    private string? _formError;
+
+    protected override Task OnInitializedAsync() => ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        var result = await Categories.GetAllAsync();
+
+        if (result.Success)
+        {
+            _categories = (result.Data ?? [])
+                .OrderBy(c => c.IsArchived)
+                .ThenBy(c => c.Name)
+                .ToList();
+        }
+        else
+        {
+            _error = result.Error;
+        }
+
+        _loading = false;
+    }
+
+    private async Task AddAsync()
+    {
+        _busy = true;
+        _formError = null;
+
+        var result = await Categories.AddAsync(_newCategory);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _formError = result.ValidationErrors.Count > 0
+                ? string.Join(" ", result.ValidationErrors.SelectMany(e => e.Value))
+                : result.Error;
+            return;
+        }
+
+        _newCategory.Name = string.Empty;
+        _newCategory.Description = null;
+        _showForm = false;
+        await ReloadAsync();
+    }
+
+    private async Task ToggleAsync(CategoryDto category)
+    {
+        _togglingId = category.Id;
+
+        var result = await Categories.ChangeStatusAsync(category.Id, !category.IsArchived);
+
+        _togglingId = null;
+
+        if (result.Success) await ReloadAsync();
+        else _error = result.Error;
+    }
+}

@@ -1,0 +1,123 @@
+@page "/cuentas/{AccountId:guid}/editar"
+@attribute [Authorize]
+@inject AccountService Accounts
+@inject CatalogService Catalog
+@inject NavigationManager Nav
+
+<PageTitle>Editar cuenta · Gastos</PageTitle>
+
+<header class="page-header">
+    <a class="back-link" href="cuentas">← Cuentas</a>
+    <h1>Editar cuenta</h1>
+</header>
+
+@if (_loading)
+{
+    <LoadingBlock />
+}
+else if (_notFound)
+{
+    <Alert Message="No se encontró la cuenta." />
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="edit-account">
+        <DataAnnotationsValidator />
+        <Alert Message="@_error" />
+
+        <label class="field">
+            <span class="field-label">Nombre</span>
+            <InputText @bind-Value="_model.Name" class="input" />
+            <ValidationMessage For="() => _model.Name" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Descripción <span class="field-hint">(opcional)</span></span>
+            <InputTextArea @bind-Value="_model.Description" class="input" rows="2" />
+        </label>
+
+        <label class="field">
+            <span class="field-label">Banco</span>
+            <InputSelect @bind-Value="_model.BankId" class="input">
+                <option value="">Selecciona…</option>
+                @foreach (var bank in _banks)
+                {
+                    <option value="@bank.Id">@bank.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => _model.BankId" />
+        </label>
+
+        <label class="field field-inline">
+            <InputCheckbox @bind-Value="_model.IsArchived" class="checkbox" />
+            <span>
+                <span class="field-label">Archivar cuenta</span>
+                <span class="field-hint">Conserva el historial pero la saca de los selectores.</span>
+            </span>
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+            @(_busy ? "Guardando…" : "Guardar cambios")
+        </button>
+    </EditForm>
+
+    @if (_isCredit)
+    {
+        <p class="hint-block">
+            Esta cuenta es una tarjeta de crédito:
+            <a href="@($"cuentas/{AccountId}/tarjeta")">editar límite y fechas</a>.
+        </p>
+    }
+}
+
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+
+    private readonly EditFinanceAccountRequest _model = new();
+    private IReadOnlyList<BankDto> _banks = [];
+    private bool _loading = true;
+    private bool _busy;
+    private bool _notFound;
+    private bool _isCredit;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _banks = await Catalog.GetActiveBanksAsync();
+
+        // No hay endpoint GET de una cuenta suelta, así que se localiza dentro
+        // del listado completo, que de todas formas ya trae lo editable.
+        var all = await Accounts.GetAllAsync();
+        var account = (all.Data ?? []).FirstOrDefault(a => a.Id == AccountId);
+
+        if (account is null)
+        {
+            _notFound = true;
+        }
+        else
+        {
+            _model.Name = account.Name;
+            _model.Description = account.Description;
+            _model.IsArchived = account.IsArchived;
+            _model.BankId = _banks.FirstOrDefault(b => b.Name == account.BankName)?.Id;
+
+            var active = await Accounts.GetActiveAsync();
+            _isCredit = (active.Data ?? []).Any(a => a.Id == AccountId && a.IsCredit);
+        }
+
+        _loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = await Accounts.EditAsync(AccountId, _model);
+
+        _busy = false;
+
+        if (result.Success) Nav.NavigateTo("cuentas");
+        else _error = result.Error;
+    }
+}
