@@ -1,5 +1,5 @@
 @page "/categorias"
-@attribute [Authorize]
+@attribute [Authorize(Policy = Policies.Operational)]
 @inject CategoryService Categories
 
 <PageTitle>Categorías · Gastos</PageTitle>

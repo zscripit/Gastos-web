@@ -1,0 +1,25 @@
+@inject NavigationManager Nav
+
+@* Decide a dónde mandar a quien no puede ver una página:
+   - sin sesión, al login (conservando a dónde quería ir);
+   - con sesión pero sin permiso (p. ej. un SuperAdmin en /inicio), a su
+     propio inicio. Mandarlo al login crearía un bucle, porque el login lo
+     devolvería a la misma página. *@
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = AuthState is null ? null : (await AuthState).User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo(user.HomeRoute(), replace: true);
+            return;
+        }
+
+        var target = Uri.EscapeDataString(Nav.ToBaseRelativePath(Nav.Uri));
+        Nav.NavigateTo($"login?returnUrl={target}", replace: true);
+    }
+}

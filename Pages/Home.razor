@@ -1,5 +1,5 @@
 @page "/inicio"
-@attribute [Authorize]
+@attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
 
 <PageTitle>Inicio · Gastos</PageTitle>
@@ -102,16 +102,7 @@ else
                 {
                     <li class="list-item">
                         <div class="list-lead">
-                            <span class="glyph">
-                                @if (!string.IsNullOrWhiteSpace(account.BankIconUrl))
-                                {
-                                    <img src="@account.BankIconUrl" alt="" loading="lazy" />
-                                }
-                                else
-                                {
-                                    @Initials(account.BankName)
-                                }
-                            </span>
+                            <Glyph Name="@account.BankName" IconUrl="@account.BankIconUrl" />
                             <div>
                                 <p class="list-title">@account.Name</p>
                                 <p class="list-subtitle">@account.BankName · @account.AccountType.DisplayName()</p>
@@ -153,17 +144,6 @@ else
         }
 
         _loading = false;
-    }
-
-    private static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length switch
-        {
-            0 => "?",
-            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
-            _ => $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant()
-        };
     }
 
     private static string PaymentLabel(ActiveAccountDto card) => card.DaysUntilPayment switch

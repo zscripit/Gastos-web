@@ -1,5 +1,5 @@
 @page "/cuentas/{AccountId:guid}/tarjeta"
-@attribute [Authorize]
+@attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
 @inject CatalogService Catalog
 @inject NavigationManager Nav

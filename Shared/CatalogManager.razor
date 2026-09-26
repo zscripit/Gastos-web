@@ -1,0 +1,245 @@
+@inject CatalogService Catalog
+
+@* Administración de un catálogo global (bancos o proveedores). Las dos
+   pantallas son idénticas salvo por textos y límites, así que comparten este
+   componente en vez de duplicar la lógica. *@
+
+<header class="page-header page-header-actions">
+    <div>
+        <h1>@Title</h1>
+        <p class="page-subtitle">@Subtitle</p>
+    </div>
+    <button class="btn btn-primary btn-sm" type="button" @onclick="ToggleForm">
+        @if (_showForm)
+        {
+            <span>Cancelar</span>
+        }
+        else
+        {
+            <Icon Name="plus" Size="16" /><span>Nuevo</span>
+        }
+    </button>
+</header>
+
+<Alert Message="@_notice" Kind="success" />
+
+@if (_showForm)
+{
+    <EditForm Model="_model" OnValidSubmit="AddAsync" FormName="@($"new-{Kind}")" class="inline-form">
+        <DataAnnotationsValidator />
+        <Alert Message="@_formError" />
+
+        <div class="catalog-form-head">
+            <Glyph Name="@_model.Name" IconUrl="@_model.IconUrl" CssClass="glyph-lg" />
+            <div class="catalog-form-fields">
+                <label class="field">
+                    <span class="field-label">Nombre</span>
+                    <InputTextLive @bind-Value="_model.Name"
+                               class="input" placeholder="@NamePlaceholder" maxlength="@NameMaxLength" />
+                    <ValidationMessage For="() => _model.Name" />
+                </label>
+            </div>
+        </div>
+
+        <label class="field">
+            <span class="field-label">URL del logotipo <span class="field-hint">(opcional)</span></span>
+            <InputTextLive @bind-Value="_model.IconUrl"
+                       class="input" type="url" inputmode="url" placeholder="https://…" />
+            <span class="field-hint">La vista previa aparece a la izquierda mientras escribes.</span>
+            <ValidationMessage For="() => _model.IconUrl" />
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit" disabled="@_busy">
+            @(_busy ? "Guardando…" : $"Agregar {Singular}")
+        </button>
+    </EditForm>
+}
+
+@if (_loading)
+{
+    <div class="list"><Skeleton Variant="row" Count="4" /></div>
+}
+else if (_error is not null)
+{
+    <Alert Message="@_error" />
+}
+else if (_items.Count == 0)
+{
+    <EmptyState Title="@($"El catálogo de {Plural} está vacío")"
+                Description="@EmptyDescription" />
+}
+else
+{
+    <div class="catalog-toolbar">
+        <div class="segmented segmented-inline" role="tablist">
+            <button type="button" role="tab" class="segment @(_filter == Filter.Active ? "is-active" : null)"
+                    @onclick="() => _filter = Filter.Active">
+                Activos <span class="segment-count">@ActiveCount</span>
+            </button>
+            <button type="button" role="tab" class="segment @(_filter == Filter.Archived ? "is-active" : null)"
+                    @onclick="() => _filter = Filter.Archived">
+                Archivados <span class="segment-count">@(_items.Count - ActiveCount)</span>
+            </button>
+            <button type="button" role="tab" class="segment @(_filter == Filter.All ? "is-active" : null)"
+                    @onclick="() => _filter = Filter.All">
+                Todos <span class="segment-count">@_items.Count</span>
+            </button>
+        </div>
+
+        <input class="input catalog-search" type="search" placeholder="Buscar…"
+               @bind="_search" @bind:event="oninput" aria-label="@($"Buscar {Plural}")" />
+    </div>
+
+    @if (Visible.Count == 0)
+    {
+        <EmptyState Title="Sin resultados" Description="Ningún elemento coincide con el filtro." />
+    }
+    else
+    {
+        <ul class="list">
+            @foreach (var item in Visible)
+            {
+                <li class="list-item @(item.IsArchived ? "is-archived" : null)" @key="item.Id">
+                    <div class="list-lead">
+                        <Glyph Name="@item.Name" IconUrl="@item.IconUrl" />
+                        <div>
+                            <p class="list-title">@item.Name</p>
+                            <p class="list-subtitle">@(item.IsArchived ? "Oculto en los formularios" : "Visible para todos los usuarios")</p>
+                        </div>
+                    </div>
+                    <div class="list-actions">
+                        @if (item.IsArchived)
+                        {
+                            <span class="badge badge-neutral">Archivado</span>
+                        }
+                        <button class="btn btn-ghost btn-sm" type="button"
+                                disabled="@(_togglingId == item.Id)"
+                                @onclick="() => ToggleAsync(item)">
+                            @(item.IsArchived ? "Reactivar" : "Archivar")
+                        </button>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    <p class="hint-block">
+        Archivar sólo lo oculta del selector al crear @Plural nuevos; lo que ya lo
+        usa sigue funcionando igual.
+    </p>
+}
+
+@code {
+    [Parameter, EditorRequired] public CatalogKind Kind { get; set; }
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Subtitle { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Singular { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Plural { get; set; } = string.Empty;
+    [Parameter] public string NamePlaceholder { get; set; } = string.Empty;
+    [Parameter] public string EmptyDescription { get; set; } = string.Empty;
+
+    /// <summary>La API limita el nombre del banco a 30; el de proveedor no tiene tope.</summary>
+    [Parameter] public int? NameMaxLength { get; set; }
+
+    private enum Filter { Active, Archived, All }
+
+    private List<CatalogItemDto> _items = [];
+    private SaveCatalogItemRequest _model = new();
+    private Filter _filter = Filter.Active;
+    private string _search = string.Empty;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _showForm;
+    private Guid? _togglingId;
+    private string? _error;
+    private string? _formError;
+    private string? _notice;
+
+    private int ActiveCount => _items.Count(i => !i.IsArchived);
+
+    private List<CatalogItemDto> Visible => _items
+        .Where(i => _filter switch
+        {
+            Filter.Active => !i.IsArchived,
+            Filter.Archived => i.IsArchived,
+            _ => true
+        })
+        .Where(i => string.IsNullOrWhiteSpace(_search)
+                    || i.Name.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase))
+        .ToList();
+
+    protected override Task OnInitializedAsync() => ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        var result = await Catalog.GetAllAsync(Kind);
+
+        if (result.Success)
+        {
+            _items = (result.Data ?? []).OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+            _error = null;
+        }
+        else
+        {
+            _error = result.Error;
+        }
+
+        _loading = false;
+    }
+
+    private void ToggleForm()
+    {
+        _showForm = !_showForm;
+        _formError = null;
+        _notice = null;
+        if (_showForm) _model = new SaveCatalogItemRequest();
+    }
+
+    private async Task AddAsync()
+    {
+        _busy = true;
+        _formError = null;
+
+        var name = _model.Name.Trim();
+        var result = await Catalog.AddAsync(Kind, _model);
+
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _formError = result.StatusCode == 409
+                ? $"Ya existe un {Singular} llamado “{name}”."
+                : result.ValidationErrors.Count > 0
+                    ? string.Join(" ", result.ValidationErrors.SelectMany(e => e.Value))
+                    : result.Error;
+            return;
+        }
+
+        _showForm = false;
+        _filter = Filter.Active;
+        _notice = $"“{name}” se agregó al catálogo.";
+        await ReloadAsync();
+    }
+
+    private async Task ToggleAsync(CatalogItemDto item)
+    {
+        _togglingId = item.Id;
+        _notice = null;
+
+        var result = await Catalog.ChangeStatusAsync(Kind, item.Id, !item.IsArchived);
+
+        _togglingId = null;
+
+        if (result.Success)
+        {
+            // La API devuelve el estado resultante; se aplica en sitio para no
+            // recargar toda la lista por un solo cambio.
+            item.IsArchived = result.Data;
+        }
+        else
+        {
+            _error = result.Error;
+        }
+    }
+
+}

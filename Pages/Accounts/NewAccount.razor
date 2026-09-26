@@ -1,5 +1,5 @@
 @page "/cuentas/nueva"
-@attribute [Authorize]
+@attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
 @inject CatalogService Catalog
 @inject NavigationManager Nav

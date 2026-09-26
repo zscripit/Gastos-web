@@ -18,6 +18,16 @@
                     <p class="list-title">@(auth.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "—")</p>
                 </div>
             </li>
+            <li class="list-item">
+                <div>
+                    <p class="list-subtitle">Tipo de cuenta</p>
+                    <p class="list-title">@(auth.User.IsSystemAdmin() ? "Administrador del sistema" : "Usuario")</p>
+                </div>
+                @if (auth.User.IsSystemAdmin())
+                {
+                    <span class="badge badge-accent">SuperAdmin</span>
+                }
+            </li>
         </ul>
     </Authorized>
 </AuthorizeView>

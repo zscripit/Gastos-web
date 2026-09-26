@@ -1,0 +1,13 @@
+@inherits InputText
+
+@* InputText que avisa al formulario en cada tecla, no sólo al perder el foco.
+
+   Hace falta porque @bind-Value:event="oninput" no funciona sobre InputText:
+   ese modificador sólo aplica a elementos HTML, en un componente compila sin
+   error pero se ignora. Heredar de InputText conserva la integración con
+   EditForm (validación, clases de estado, ValidationMessage). *@
+
+<input @attributes="AdditionalAttributes"
+       class="@CssClass"
+       value="@CurrentValueAsString"
+       @oninput="e => CurrentValueAsString = e.Value?.ToString()" />

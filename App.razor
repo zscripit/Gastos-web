@@ -3,7 +3,7 @@
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    <RedirectToLogin />
+                    <NotAuthorizedRedirect />
                 </NotAuthorized>
                 <Authorizing>
                     <div class="screen-center"><span class="spinner"></span></div>

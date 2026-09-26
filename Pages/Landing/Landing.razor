@@ -328,7 +328,7 @@
         var state = await AuthState;
         if (state.User.Identity?.IsAuthenticated == true)
         {
-            Nav.NavigateTo("inicio", replace: true);
+            Nav.NavigateTo(state.User.HomeRoute(), replace: true);
         }
     }
 }

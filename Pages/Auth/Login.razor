@@ -2,6 +2,7 @@
 @layout AuthLayout
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Iniciar sesión · Gastos</PageTitle>
 
@@ -59,6 +60,8 @@
             return;
         }
 
-        Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "inicio" : ReturnUrl, replace: true);
+        // El inicio depende del rol: el SuperAdmin no tiene resumen financiero.
+        var user = (await AuthStateProvider.GetAuthenticationStateAsync()).User;
+        Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? user.HomeRoute() : ReturnUrl, replace: true);
     }
 }

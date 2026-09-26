@@ -1,0 +1,13 @@
+@page "/admin/bancos"
+@attribute [Authorize(Policy = Policies.SystemAdmin)]
+
+<PageTitle>Bancos · Administración · Gastos</PageTitle>
+
+<CatalogManager Kind="CatalogKind.Bank"
+                Title="Bancos"
+                Subtitle="Catálogo global para dar de alta cuentas y tarjetas"
+                Singular="banco"
+                Plural="bancos"
+                NamePlaceholder="BBVA"
+                NameMaxLength="30"
+                EmptyDescription="Sin bancos, ningún usuario puede registrar cuentas ni tarjetas. Agrega el primero." />

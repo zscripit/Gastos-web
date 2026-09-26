@@ -27,7 +27,16 @@ builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
-builder.Services.AddAuthorizationCore();
+builder.Services.AddAuthorizationCore(options =>
+{
+    // Las reglas viven en AppRoles para que las páginas, la navegación y las
+    // redirecciones decidan exactamente igual.
+    options.AddPolicy(Policies.Operational, policy =>
+        policy.RequireAssertion(ctx => ctx.User.IsOperationalUser()));
+
+    options.AddPolicy(Policies.SystemAdmin, policy =>
+        policy.RequireAssertion(ctx => ctx.User.IsSystemAdmin()));
+});
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AccountService>();

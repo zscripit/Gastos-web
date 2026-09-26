@@ -10,26 +10,49 @@
 
 <div class="app-shell">
     <AuthorizeView>
-        <Authorized>
-            <nav class="nav" aria-label="Navegación principal">
+        <Authorized Context="auth">
+            @{ var isAdmin = auth.User.IsSystemAdmin(); }
+            <nav class="nav @(isAdmin ? "nav-admin" : null)" aria-label="Navegación principal">
                 <div class="nav-brand">
-                    <span class="nav-brand-mark"><Icon Name="coins" Size="18" /></span>
-                    <span class="nav-brand-name">Gastos</span>
+                    <span class="nav-brand-mark"><Icon Name="@(isAdmin ? "shield" : "coins")" Size="18" /></span>
+                    <span>
+                        <span class="nav-brand-name">Gastos</span>
+                        @if (isAdmin)
+                        {
+                            <span class="nav-brand-role">Administración</span>
+                        }
+                    </span>
                 </div>
 
                 <div class="nav-items">
-                    <NavLink class="tab" href="inicio">
-                        <span class="tab-icon"><Icon Name="home" /></span>
-                        <span class="tab-label">Inicio</span>
-                    </NavLink>
-                    <NavLink class="tab" href="cuentas">
-                        <span class="tab-icon"><Icon Name="wallet" /></span>
-                        <span class="tab-label">Cuentas</span>
-                    </NavLink>
-                    <NavLink class="tab" href="categorias">
-                        <span class="tab-icon"><Icon Name="tag" /></span>
-                        <span class="tab-label">Categorías</span>
-                    </NavLink>
+                    @if (isAdmin)
+                    {
+                        @* El SuperAdmin sólo administra catálogos del sistema: no tiene
+                           resumen, cuentas ni categorías propias. *@
+                        <NavLink class="tab" href="admin/bancos">
+                            <span class="tab-icon"><Icon Name="bank" /></span>
+                            <span class="tab-label">Bancos</span>
+                        </NavLink>
+                        <NavLink class="tab" href="admin/proveedores">
+                            <span class="tab-icon"><Icon Name="plug" /></span>
+                            <span class="tab-label">Proveedores</span>
+                        </NavLink>
+                    }
+                    else
+                    {
+                        <NavLink class="tab" href="inicio">
+                            <span class="tab-icon"><Icon Name="home" /></span>
+                            <span class="tab-label">Inicio</span>
+                        </NavLink>
+                        <NavLink class="tab" href="cuentas">
+                            <span class="tab-icon"><Icon Name="wallet" /></span>
+                            <span class="tab-label">Cuentas</span>
+                        </NavLink>
+                        <NavLink class="tab" href="categorias">
+                            <span class="tab-icon"><Icon Name="tag" /></span>
+                            <span class="tab-label">Categorías</span>
+                        </NavLink>
+                    }
                     <NavLink class="tab" href="perfil">
                         <span class="tab-icon"><Icon Name="user" /></span>
                         <span class="tab-label">Perfil</span>
@@ -47,29 +70,19 @@
     </AuthorizeView>
 
     <main class="app-main">
-        <div class="app-content" @key="_routeKey">
+        @* La clave se lee de la URL en el mismo render en que el router cambia
+           de página, así que cada navegación monta la pantalla una sola vez (y
+           dispara su animación de entrada). Actualizarla desde LocationChanged
+           la montaba dos veces: una el router y otra el cambio de clave, con
+           lo que cada pantalla pedía sus datos a la API por duplicado. *@
+        <div class="app-content" @key="Nav.Uri">
             @Body
         </div>
     </main>
 </div>
 
 @code {
-    // Cambiar la clave en cada navegación vuelve a montar el contenido, que es
-    // lo que dispara la animación de entrada de la pantalla.
-    private string _routeKey = string.Empty;
-
-    protected override void OnInitialized()
-    {
-        Api.Unauthorized += HandleUnauthorizedAsync;
-        Nav.LocationChanged += OnLocationChanged;
-        _routeKey = Nav.Uri;
-    }
-
-    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
-    {
-        _routeKey = e.Location;
-        StateHasChanged();
-    }
+    protected override void OnInitialized() => Api.Unauthorized += HandleUnauthorizedAsync;
 
     // Si la API rechaza el token (expirado o revocado) se limpia la sesión y
     // se manda al login, en vez de dejar la app mostrando pantallas vacías.
@@ -85,9 +98,5 @@
         Nav.NavigateTo("login", replace: true);
     }
 
-    public void Dispose()
-    {
-        Api.Unauthorized -= HandleUnauthorizedAsync;
-        Nav.LocationChanged -= OnLocationChanged;
-    }
+    public void Dispose() => Api.Unauthorized -= HandleUnauthorizedAsync;
 }

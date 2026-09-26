@@ -43,10 +43,27 @@ app.UseCors("web");   // antes de UseAuthentication/UseAuthorization
 | `/` | Público | Landing (`Pages/Landing`, estilos en `css/landing.css`) |
 | `/login`, `/registro` | Público | Sesión |
 | `/inicio` | Con sesión | Resumen; es también el `start_url` de la PWA instalada |
-| `/cuentas`, `/categorias`, `/perfil` | Con sesión | Administración |
+| `/cuentas`, `/categorias` | Usuario | Administración de sus finanzas |
+| `/admin/bancos`, `/admin/proveedores` | SuperAdmin | Catálogos globales |
+| `/perfil` | Cualquiera con sesión | Datos de la cuenta |
 
 Las ilustraciones de la landing son SVG en línea pintados con las variables de
 `app.css`: siguen al tema, no pesan y funcionan sin conexión.
+
+## Roles
+
+El **SuperAdmin es un rol de sistema**, no un usuario con extras: sólo
+administra los catálogos globales y nunca ve la parte operativa. Las reglas
+viven en `Services/AppRoles.cs` y las usan por igual las políticas de las
+páginas, la navegación y las redirecciones:
+
+- Si el token trae `SuperAdmin`, ese rol manda aunque también venga `User`.
+- Quien tiene sesión pero entra a una página que no le toca va a *su* inicio
+  (`/admin/bancos` o `/inicio`), no al login; mandarlo al login crearía un
+  bucle, porque el login lo devolvería a la misma página.
+
+Esto es sólo la interfaz: **la API debe aplicar la misma regla**, porque un
+token se puede usar directamente con curl sin pasar por la app.
 
 ## Diseño responsivo
 

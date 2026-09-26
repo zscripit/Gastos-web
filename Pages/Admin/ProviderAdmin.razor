@@ -1,0 +1,12 @@
+@page "/admin/proveedores"
+@attribute [Authorize(Policy = Policies.SystemAdmin)]
+
+<PageTitle>Proveedores · Administración · Gastos</PageTitle>
+
+<CatalogManager Kind="CatalogKind.Provider"
+                Title="Proveedores"
+                Subtitle="Catálogo global para servicios recurrentes (internet, agua, luz…)"
+                Singular="proveedor"
+                Plural="proveedores"
+                NamePlaceholder="Telmex"
+                EmptyDescription="Los usuarios eligen de aquí al registrar un servicio recurrente." />
