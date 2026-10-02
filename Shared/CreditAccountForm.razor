@@ -7,14 +7,14 @@
 
     <label class="field">
         <span class="field-label">Nombre</span>
-        <InputText @bind-Value="Model.Name" class="input" placeholder="Tarjeta Oro BBVA" />
+        <InputTextLive @bind-Value="Model.Name" class="input" placeholder="Tarjeta Oro BBVA" />
         <span class="field-hint">Entre 8 y 35 caracteres.</span>
         <ValidationMessage For="() => Model.Name" />
     </label>
 
     <label class="field">
         <span class="field-label">Descripción <span class="field-hint">(opcional)</span></span>
-        <InputTextArea @bind-Value="Model.Description" class="input" rows="2" />
+        <InputTextAreaLive @bind-Value="Model.Description" class="input" rows="2" />
     </label>
 
     <label class="field">
@@ -32,28 +32,28 @@
     <div class="field-row">
         <label class="field">
             <span class="field-label">Límite de crédito</span>
-            <InputNumber @bind-Value="Model.CreditLimit" class="input" inputmode="decimal" step="0.01" />
+            <InputNumberLive @bind-Value="Model.CreditLimit" class="input" inputmode="decimal" step="0.01" />
             <ValidationMessage For="() => Model.CreditLimit" />
         </label>
 
         <label class="field">
             <span class="field-label">Tasa anual (%)</span>
-            <InputNumber @bind-Value="Model.InterestRate" class="input" inputmode="decimal" step="0.01" />
+            <InputNumberLive @bind-Value="Model.InterestRate" class="input" inputmode="decimal" step="0.01" />
             <ValidationMessage For="() => Model.InterestRate" />
         </label>
     </div>
 
     <div class="field-row">
         <label class="field">
-            <span class="field-label">Fecha de corte</span>
-            <InputDate @bind-Value="Model.CutDate" class="input" />
-            <ValidationMessage For="() => Model.CutDate" />
+            <span class="field-label">Día de corte</span>
+            <InputNumberLive @bind-Value="Model.CutDay" class="input" min="1" max="31" />
+            <ValidationMessage For="() => Model.CutDay" />
         </label>
 
         <label class="field">
-            <span class="field-label">Fecha de pago</span>
-            <InputDate @bind-Value="Model.PayDate" class="input" />
-            <ValidationMessage For="() => Model.PayDate" />
+            <span class="field-label">Día de pago</span>
+            <InputNumberLive @bind-Value="Model.PayDay" class="input" min="1" max="31" />
+            <ValidationMessage For="() => Model.PayDay" />
         </label>
     </div>
 

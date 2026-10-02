@@ -1,0 +1,168 @@
+@page "/movimientos"
+@attribute [Authorize(Policy = Policies.Operational)]
+@inject OperationsService Operations
+@inject AccountService Accounts
+@inject CategoryService Categories
+
+<PageTitle>Movimientos · Gastos</PageTitle>
+<header class="page-header"><h1>Movimientos</h1><p class="page-subtitle">Ingresos, gastos y pagos de tarjeta.</p></header>
+<Alert Message="@_error" />
+@if (_loading) { <LoadingBlock /> }
+else
+{
+    <div class="operation-actions"><button class="btn btn-primary" type="button" disabled="@_busy" @onclick="New">Registrar movimiento</button><a class="btn btn-secondary" href="planes">Compras a meses</a></div>
+    @if (_form is not null)
+    {
+        <section class="section card operation-form">
+            <h2 class="section-title">@(_id is null ? "Nuevo movimiento" : "Editar movimiento")</h2>
+            <EditForm Model="_form" OnValidSubmit="SaveAsync" FormName="transaction">
+                <DataAnnotationsValidator /><ValidationSummary />
+                <fieldset disabled="@_busy">
+                    <label class="field"><span class="field-label">Nombre</span><InputTextLive class="input" @bind-Value="_form.Name" maxlength="50" /></label>
+                    <label class="field"><span class="field-label">Descripción</span><InputTextAreaLive class="input" @bind-Value="_form.Description" /></label>
+                    <div class="field-row"><label class="field"><span class="field-label">Monto</span><InputNumberLive class="input" @bind-Value="_form.Amount" step="0.01" /></label><label class="field"><span class="field-label">Fecha</span><InputDateLive class="input" @bind-Value="_form.Date" /></label></div>
+                    @if (_id is null)
+                    {
+                        <label class="field"><span class="field-label">Tipo</span><InputSelect class="input" @bind-Value="_form.TransactionType" @bind-Value:after="TypeChanged"><option value="Expense">Gasto</option><option value="Income">Ingreso</option><option value="Payment">Pago de tarjeta</option></InputSelect></label>
+                        <label class="field"><span class="field-label">@(_form.TransactionType == TransactionType.Payment ? "Tarjeta que recibe el pago" : "Cuenta")</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId"><option value="">Selecciona…</option>@foreach (var account in SelectableAccounts) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                    }
+                    else { <p class="field-hint">@_accountName · @TypeLabel(_form.TransactionType). La cuenta y el tipo se conservan.</p> }
+                    @if (_form.TransactionType != TransactionType.Payment && !_linked)
+                    {
+                        <label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_form.CategoryId"><option value="">Selecciona…</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label>
+                    }
+                    @if (_form.TransactionType == TransactionType.Expense && !_linked)
+                    {
+                        <label class="field"><span class="field-label">Servicio (opcional)</span><InputSelect class="input" @bind-Value="_form.ServiceId"><option value="">Sin servicio</option>@foreach (var service in _services) { <option value="@service.Id">@service.Name</option> }</InputSelect></label>
+                    }
+                    @if (_id is null && _form.TransactionType == TransactionType.Payment)
+                    {
+                        <label class="field"><span class="field-label">Cuenta de origen (opcional)</span><InputSelect class="input" @bind-Value="_form.SourceAccountId"><option value="">Sin registrar salida en otra cuenta</option>@foreach (var account in _accounts.Where(x => !x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                        <p class="field-hint">Si eliges una cuenta, también se registra la salida del dinero.</p>
+                    }
+                    @if (_linked) { <p class="field-hint">Este movimiento forma parte de un pago. Los cambios se aplican también al movimiento vinculado.</p> }
+                    <div class="operation-actions"><button class="btn btn-primary" type="submit">@(_busy ? "Guardando…" : "Guardar")</button><button class="btn btn-secondary" type="button" @onclick="Cancel">Cancelar</button></div>
+                </fieldset>
+            </EditForm>
+        </section>
+    }
+    <details class="section operation-filters"><summary>Filtrar movimientos</summary>
+        <div class="field-row"><label class="field"><span class="field-label">Cuenta</span><InputSelect class="input" @bind-Value="_accountFilter"><option value="">Todas</option>@foreach (var account in _allAccounts) { <option value="@account.Id">@account.Name</option> }</InputSelect></label><label class="field"><span class="field-label">Tipo</span><InputSelect class="input" @bind-Value="_typeFilter"><option value="">Todos</option><option value="Income">Ingresos</option><option value="Expense">Gastos</option><option value="Payment">Pagos</option></InputSelect></label></div>
+        <div class="field-row"><label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_categoryFilter"><option value="">Todas</option>@foreach (var category in _allCategories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label><label class="field"><span class="field-label">Servicio</span><InputSelect class="input" @bind-Value="_serviceFilter"><option value="">Todos</option>@foreach (var service in _allServices) { <option value="@service.Id">@service.Name</option> }</InputSelect></label></div>
+        <div class="field-row"><label class="field"><span class="field-label">Desde</span><InputDateLive class="input" @bind-Value="_from" /></label><label class="field"><span class="field-label">Hasta</span><InputDateLive class="input" @bind-Value="_to" /></label></div>
+        <button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="ApplyFiltersAsync">Aplicar filtros</button>
+    </details>
+    @if (_delete is not null)
+    {
+        <section class="card operation-form" role="alert"><p>¿Eliminar «@_delete.Name»? Esta acción es definitiva.@(_delete.TransferId is null ? "" : " También se elimina el movimiento vinculado del pago.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="DeleteAsync">Confirmar eliminación</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _delete = null">Cancelar</button></div></section>
+    }
+    @if (_page.Items.Count == 0) { <EmptyState Title="Sin movimientos" Description="Registra un movimiento o ajusta los filtros." /> }
+    else
+    {
+        <ul class="list">@foreach (var item in _page.Items)
+        {
+            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
+        }</ul>
+        <div class="operation-actions"><button class="btn btn-secondary" disabled="@(_busy || _pageNumber <= 1)" @onclick="() => LoadPageAsync(_pageNumber - 1)">Anterior</button><span>Página @_pageNumber de @_page.TotalPages · @_page.TotalCount movimientos</span><button class="btn btn-secondary" disabled="@(_busy || _pageNumber >= _page.TotalPages)" @onclick="() => LoadPageAsync(_pageNumber + 1)">Siguiente</button></div>
+    }
+}
+@code {
+    private List<ActiveAccountDto> _accounts = [];
+    private List<FinanceAccountListItem> _allAccounts = [];
+    private List<CategoryDto> _categories = [], _allCategories = [];
+    private List<ServiceDto> _services = [], _allServices = [];
+    private PagedTransactions _page = new();
+    private TransactionForm? _form;
+    private TransactionDto? _delete;
+    private readonly HashSet<Guid> _planTransactions = [];
+    private bool _plansKnown;
+    private Guid? _id, _accountFilter, _categoryFilter, _serviceFilter;
+    private TransactionType? _typeFilter;
+    private DateTime? _from, _to;
+    private int _pageNumber = 1;
+    private bool _loading = true, _busy, _linked;
+    private string? _error, _accountName;
+    private IEnumerable<ActiveAccountDto> SelectableAccounts => _accounts.Where(x => _form?.TransactionType != TransactionType.Payment || x.IsCredit);
+    protected override async Task OnInitializedAsync()
+    {
+        var accounts = await Accounts.GetActiveAsync(); var allAccounts = await Accounts.GetAllAsync();
+        var categories = await Categories.GetActiveAsync(); var allCategories = await Categories.GetAllAsync();
+        var services = await Operations.ServicesAsync(true); var allServices = await Operations.ServicesAsync();
+        _accounts = accounts.Data ?? []; _allAccounts = allAccounts.Data ?? [];
+        _categories = categories.Data ?? []; _allCategories = allCategories.Data ?? [];
+        _services = services.Data ?? []; _allServices = allServices.Data ?? [];
+        var plans = await Operations.PlansAsync();
+        _plansKnown = plans.Success;
+        if (plans.Success)
+        {
+            var details = await Task.WhenAll((plans.Data ?? []).Select(x => Operations.PlanAsync(x.Id)));
+            _plansKnown = details.All(x => x.Success && x.Data is not null);
+            foreach (var detail in details.Where(x => x.Success && x.Data is not null)) _planTransactions.Add(detail.Data!.TransactionId);
+        }
+        await LoadPageAsync(1);
+        if (!_plansKnown) _error ??= "No se pudo verificar qué movimientos pertenecen a compras a meses. Recarga para editarlos.";
+        _error ??= accounts.Error ?? allAccounts.Error ?? categories.Error ?? allCategories.Error ?? services.Error ?? allServices.Error;
+        _loading = false;
+    }
+    private void New() { _id = null; _linked = false; _form = new(); _error = null; _delete = null; }
+    private void Cancel() { _form = null; _id = null; }
+    private void TypeChanged() { if (_form is null) return; _form.FinanceAccountId = null; _form.CategoryId = null; _form.ServiceId = null; _form.SourceAccountId = null; }
+    private async Task EditAsync(Guid id)
+    {
+        if (_busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            var result = await Operations.TransactionAsync(id);
+            if (!result.Success || result.Data is null) { _error = result.Error; return; }
+            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName;
+            _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
+            if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
+            if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
+            _delete = null;
+        }
+        finally { _busy = false; }
+    }
+    private async Task SaveAsync()
+    {
+        if (_busy || _form is null) return;
+        if (_form.FinanceAccountId is null || _form.FinanceAccountId == Guid.Empty) { _error = "Selecciona una cuenta."; return; }
+        if (_form.TransactionType != TransactionType.Payment && !_linked && (_form.CategoryId is null || _form.CategoryId == Guid.Empty)) { _error = "Selecciona una categoría."; return; }
+        _busy = true; _error = null;
+        try
+        {
+            var result = await Operations.SaveTransactionAsync(_form, _id);
+            if (result.Success) { Cancel(); await FetchAsync(); }
+            else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)) + (result.StatusCode == 409 ? " Si pertenece a una compra a meses, adminístrala desde Compras a meses." : "");
+        }
+        finally { _busy = false; }
+    }
+    private async Task DeleteAsync()
+    {
+        if (_busy || _delete is null) return;
+        _busy = true; _error = null;
+        try
+        {
+            var result = await Operations.DeleteTransactionAsync(_delete.Id);
+            if (result.Success) { _delete = null; Cancel(); await FetchAsync(); }
+            else _error = result.Error + (result.StatusCode == 409 ? " Administra esta compra desde Compras a meses." : "");
+        }
+        finally { _busy = false; }
+    }
+    private async Task ApplyFiltersAsync() => await LoadPageAsync(1);
+    private async Task LoadPageAsync(int page)
+    {
+        if (_busy) return;
+        if (_from > _to) { _error = "La fecha inicial debe ser anterior a la final."; return; }
+        _busy = true; _error = null; _pageNumber = page;
+        try { await FetchAsync(); } finally { _busy = false; }
+    }
+    private async Task FetchAsync()
+    {
+        var result = await Operations.TransactionsAsync(_pageNumber, _accountFilter, _categoryFilter, _serviceFilter, _typeFilter, _from, _to);
+        if (!result.Success) { _error = result.Error; return; }
+        _page = result.Data ?? new();
+        if (_pageNumber > 1 && _page.Items.Count == 0) { _pageNumber--; await FetchAsync(); }
+    }
+    private static string TypeLabel(TransactionType type) => type switch { TransactionType.Income => "Ingreso", TransactionType.Payment => "Pago de tarjeta", _ => "Gasto" };
+}

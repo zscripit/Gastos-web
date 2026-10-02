@@ -42,5 +42,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<CatalogService>();
+builder.Services.AddScoped<OperationsService>();
 
 await builder.Build().RunAsync();

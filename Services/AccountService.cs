@@ -15,14 +15,17 @@ public sealed class AccountService(ApiClient api)
     public Task<ApiResult<List<FinanceAccountListItem>>> GetAllAsync() =>
         api.GetAsync<List<FinanceAccountListItem>>("/api/FinanceAccount/All");
 
-    public Task<ApiResult<Guid>> AddAsync(AddFinanceAccountRequest request) =>
-        api.PostAsync<Guid>("/api/FinanceAccount", new
+    public async Task<ApiResult<Guid>> AddAsync(AddFinanceAccountRequest request)
+    {
+        var result = await api.PostAsync<FinanceAccountListItem>("/api/FinanceAccount", new
         {
-            name = request.Name,
-            description = request.Description,
-            bankId = request.BankId,
-            accountType = (int?)request.AccountType
+            name = request.Name, description = request.Description,
+            bankId = request.BankId, accountType = (int?)request.AccountType
         });
+        return result.Success && result.Data is not null
+            ? ApiResult<Guid>.Ok(result.Data.Id, result.StatusCode)
+            : ApiResult<Guid>.Fail(result.Error ?? "No se recibió la cuenta creada.", result.StatusCode, result.ValidationErrors);
+    }
 
     public Task<ApiResult<FinanceAccountListItem>> EditAsync(Guid id, EditFinanceAccountRequest request) =>
         api.PutAsync<FinanceAccountListItem>($"/api/FinanceAccount/{id}", new
@@ -34,8 +37,13 @@ public sealed class AccountService(ApiClient api)
             bankId = request.BankId
         });
 
-    public Task<ApiResult<Guid>> AddCreditAsync(SaveCreditAccountRequest request) =>
-        api.PostAsync<Guid>("/api/CreditAccount", BuildCreditPayload(request));
+    public async Task<ApiResult<Guid>> AddCreditAsync(SaveCreditAccountRequest request)
+    {
+        var result = await api.PostAsync<CreditAccountDto>("/api/CreditAccount", BuildCreditPayload(request));
+        return result.Success && result.Data is not null
+            ? ApiResult<Guid>.Ok(result.Data.Id, result.StatusCode)
+            : ApiResult<Guid>.Fail(result.Error ?? "No se recibió la tarjeta creada.", result.StatusCode, result.ValidationErrors);
+    }
 
     public Task<ApiResult<CreditAccountDto>> EditCreditAsync(Guid financeAccountId, SaveCreditAccountRequest request) =>
         api.PutAsync<CreditAccountDto>($"/api/CreditAccount/{financeAccountId}", BuildCreditPayload(request, includeStatus: true));
@@ -47,12 +55,10 @@ public sealed class AccountService(ApiClient api)
         bankId = request.BankId,
         creditLimit = request.CreditLimit,
         interestRate = request.InterestRate,
-        // La API espera date-time con offset; el formulario captura sólo la fecha.
-        cutDate = ToOffset(request.CutDate),
-        payDate = ToOffset(request.PayDate),
+        cutDay = request.CutDay,
+        payDay = request.PayDay,
         isArchived = includeStatus && request.IsArchived
     };
 
-    private static DateTimeOffset? ToOffset(DateTime? date) =>
-        date is null ? null : new DateTimeOffset(DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Utc));
+
 }

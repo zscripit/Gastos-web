@@ -1,0 +1,45 @@
+@page "/cuentas/{AccountId:guid}/saldo"
+@attribute [Authorize(Policy = Policies.Operational)]
+@inject OperationsService Operations
+
+<PageTitle>Saldo · Gastos</PageTitle>
+<header class="page-header"><a class="back-link" href="cuentas">← Cuentas</a><h1>Saldo de cuenta</h1></header>
+<Alert Message="@_error" />
+@if (_loading) { <LoadingBlock /> }
+else if (_balance is not null)
+{
+    <section class="section card operation-form">
+        <h2 class="section-title">@_balance.Name</h2>
+        <dl class="balance-grid">
+            <div><dt>Saldo</dt><dd>@_balance.Balance.ToString("C2")</dd></div>
+            <div><dt>Ingresos</dt><dd>@_balance.TotalIncome.ToString("C2")</dd></div>
+            <div><dt>Gastos</dt><dd>@_balance.TotalExpense.ToString("C2")</dd></div>
+            <div><dt>Pagos</dt><dd>@_balance.TotalPayments.ToString("C2")</dd></div>
+            @if (_balance.AccountType == AccountType.Credit)
+            {
+                <div><dt>Deuda</dt><dd>@_balance.Debt?.ToString("C2")</dd></div>
+                <div><dt>Crédito disponible</dt><dd>@_balance.AvailableCredit?.ToString("C2")</dd></div>
+                <div><dt>Límite de crédito</dt><dd>@_balance.CreditLimit?.ToString("C2")</dd></div>
+            }
+        </dl>
+        @if (_balance.CurrentPeriod is { } period)
+        {
+            <h3>Periodo en curso</h3><p>@period.Start.ToString("dd MMM yyyy") al @period.CutDate.ToString("dd MMM yyyy")</p>
+            <dl class="balance-grid"><div><dt>Fecha límite de pago</dt><dd>@period.PaymentDueDate.ToString("dd MMM yyyy")</dd></div><div><dt>Gastos del periodo</dt><dd>@period.Expenses.ToString("C2")</dd></div><div><dt>Cuotas a meses</dt><dd>@period.Installments.ToString("C2")</dd></div><div><dt>Pagos realizados</dt><dd>@period.Payments.ToString("C2")</dd></div><div><dt>Total que va a cortar</dt><dd>@period.Total.ToString("C2")</dd></div></dl>
+        }
+        <div class="operation-actions"><a class="btn btn-secondary" href="movimientos">Movimientos</a><a class="btn btn-secondary" href="@($"cuentas/{AccountId}/editar")">Editar cuenta</a></div>
+    </section>
+}
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+    private AccountBalanceDto? _balance;
+    private string? _error;
+    private bool _loading = true;
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true; _error = null; _balance = null;
+        var result = await Operations.BalanceAsync(AccountId);
+        if (result.Success) _balance = result.Data; else _error = result.Error;
+        _loading = false;
+    }
+}

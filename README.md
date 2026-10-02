@@ -87,5 +87,21 @@ Implementado: landing pública en `/` (quien ya tiene sesión salta a `/inicio`)
 próximos pagos de tarjeta, alta/edición de cuentas de débito-ahorro-efectivo,
 alta/edición de tarjetas de crédito, categorías (alta y archivar/reactivar).
 
-Pendiente **por falta de endpoints en la API**: transacciones, servicios
-recurrentes y planes de meses sin intereses con sus cuotas.
+También implementado según OpenAPI: servicios (alta, edición y archivo), movimientos (alta, edición, eliminación, filtros y paginación), pagos de tarjeta vinculados a una cuenta de origen, compras a meses (alta, calendario, liquidación anticipada y eliminación) y saldos por cuenta con periodo de tarjeta.
+
+Rutas operativas nuevas: `/servicios`, `/movimientos`, `/planes` y `/cuentas/{id}/saldo`. Los días de corte y pago de las tarjetas son números del 1 al 31. Los movimientos que pertenecen a una compra a meses se gestionan desde su plan. Liquidar un plan cambia su calendario; no registra un pago a la tarjeta.
+
+## Verificación
+
+```bash
+dotnet run --project ContractTests/ContractTests.csproj
+dotnet publish GastosApp.Web.csproj -c Release
+```
+
+Las pruebas comprueban contratos HTTP, validaciones, fechas, pagos vinculados y respuestas de error sin usar una base de datos. Para revisar la interfaz con datos ficticios, iniciar la app en el puerto 5025 y ejecutar:
+
+```bash
+dotnet run --project ContractTests/ContractTests.csproj -- --preview
+```
+
+La vista de prueba vive en `http://localhost:15025`; simula la API y una sesión exclusivamente en ese servidor local. `ContractTests` está excluido del cliente publicado. La verificación con la API real requiere iniciar sesión en la app normal y utilizar datos de prueba.

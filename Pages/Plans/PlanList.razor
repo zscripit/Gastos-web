@@ -1,0 +1,124 @@
+@page "/planes"
+@attribute [Authorize(Policy = Policies.Operational)]
+@inject OperationsService Operations
+@inject AccountService Accounts
+@inject CategoryService Categories
+
+<PageTitle>Compras a meses · Gastos</PageTitle>
+<header class="page-header"><h1>Compras a meses</h1><p class="page-subtitle">Consulta el avance y calendario de tus compras.</p></header>
+<Alert Message="@_error" />
+@if (_loading) { <LoadingBlock /> }
+else
+{
+    <div class="operation-actions"><button class="btn btn-primary" type="button" disabled="@_busy" @onclick="New">Registrar compra</button><label>Mostrar <InputSelect class="input" @bind-Value="_status" @bind-Value:after="LoadAsync"><option value="All">Todas</option><option value="Active">Activas</option><option value="Finished">Finalizadas</option></InputSelect></label></div>
+    @if (_form is not null)
+    {
+        <section class="section card operation-form"><h2 class="section-title">Nueva compra a meses</h2>
+            <EditForm Model="_form" OnValidSubmit="SaveAsync" FormName="plan"><DataAnnotationsValidator /><ValidationSummary /><fieldset disabled="@_busy">
+                <label class="field"><span class="field-label">Nombre</span><InputTextLive class="input" @bind-Value="_form.Name" maxlength="50" /></label>
+                <label class="field"><span class="field-label">Descripción</span><InputTextAreaLive class="input" @bind-Value="_form.Description" /></label>
+                <div class="field-row"><label class="field"><span class="field-label">Precio sin intereses</span><InputNumberLive class="input" @bind-Value="_form.Amount" step="0.01" /></label><label class="field"><span class="field-label">Interés total (%)</span><InputNumberLive class="input" @bind-Value="_form.Interest" step="0.01" /></label></div>
+                <div class="field-row"><label class="field"><span class="field-label">Meses (2 a 48)</span><InputNumberLive class="input" @bind-Value="_form.Months" /></label><label class="field"><span class="field-label">Fecha de compra</span><InputDateLive class="input" @bind-Value="_form.Date" /></label></div>
+                <label class="field"><span class="field-label">Tarjeta</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId"><option value="">Selecciona…</option>@foreach (var account in _accounts.Where(x => x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                <label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_form.CategoryId"><option value="">Selecciona…</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label>
+                <label class="field"><span class="field-label">Primera cuota (opcional)</span><InputDateLive class="input" @bind-Value="_form.FirstInstallmentDate" /><span class="field-hint">Déjala vacía para usar el primer corte después de la compra.</span></label>
+                <p class="field-hint">Usa interés 0 para MSI. La compra completa se registra como deuda; las cuotas indican lo que se cobra cada mes.</p>
+                <div class="operation-actions"><button class="btn btn-primary" type="submit">Guardar</button><button class="btn btn-secondary" type="button" @onclick="() => _form = null">Cancelar</button></div>
+            </fieldset></EditForm>
+        </section>
+    }
+    @if (_selected is not null)
+    {
+        <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@_selected.FinanceAccountName · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest%</p>
+            @if (_selected.SettledOn is DateOnly settled) { <p>Liquidada el @settled.ToString("dd MMM yyyy")</p> }
+            <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item"><div>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</div><div>@installment.Amount.ToString("C2") <span class="badge">@(installment.Charged ? "Cobrada" : "Por cobrar")</span></div></li> }</ul>
+            <p class="field-hint">Una cuota cobrada ya llegó a su fecha; no significa que hayas pagado la tarjeta.</p>
+            <fieldset disabled="@_busy">
+                @if (_selected.SettledOn is null && _selected.Installments.Any(x => !x.Charged))
+                {
+                    <details class="section"><summary>Liquidar anticipadamente</summary>
+                        <label class="field"><span class="field-label">Fecha (opcional)</span><InputDateLive class="input" @bind-Value="_settleDate" /></label>
+                        <label class="field"><span class="field-label">Monto de liquidación (opcional)</span><InputNumberLive class="input" @bind-Value="_payoff" step="0.01" /><span class="field-hint">Vacío: todo lo pendiente a la fecha elegida.</span></label>
+                        <p>La liquidación sustituye las cuotas pendientes. El pago a la tarjeta se registra por separado en Movimientos.</p>
+                        <button class="btn btn-primary" type="button" @onclick="() => _confirm = ConfirmAction.Settle">Revisar liquidación</button>
+                    </details>
+                }
+                <div class="operation-actions"><button class="btn btn-secondary" type="button" @onclick="() => _confirm = ConfirmAction.Delete">Eliminar compra</button><button class="btn btn-secondary" type="button" @onclick="Close">Cerrar detalle</button></div>
+            </fieldset>
+            @if (_confirm is not null)
+            {
+                <div role="alert" class="section"><p>@(_confirm == ConfirmAction.Delete ? "¿Eliminar definitivamente la compra, sus cuotas y el gasto en la tarjeta?" : "¿Confirmar la liquidación? El calendario será reemplazado y no se podrá liquidar de nuevo.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="ConfirmAsync">Confirmar</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _confirm = null">Cancelar</button></div></div>
+            }
+        </section>
+    }
+    @if (_items.Count == 0) { <EmptyState Title="Sin compras a meses" Description="Registra una compra o cambia el filtro." /> }
+    else
+    {
+        <ul class="list">@foreach (var item in _items)
+        {
+            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Total.ToString("C2")</p><p class="list-subtitle">@item.FinanceAccountName · @item.InstallmentsCharged de @item.Months cuotas cobradas</p><p class="list-subtitle">Por cobrar @item.RemainingAmount.ToString("C2") · Próxima @item.NextInstallmentDate?.ToString("dd MMM yyyy")</p><progress value="@item.InstallmentsCharged" max="@item.Months" aria-label="Cuotas cobradas"></progress>@if (item.SettledOn is not null) { <span class="badge">Liquidada</span> }</div><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => DetailAsync(item.Id)">Ver cuotas</button></li>
+        }</ul>
+    }
+}
+@code {
+    private List<FinancePlanDto> _items = [];
+    private List<ActiveAccountDto> _accounts = [];
+    private List<CategoryDto> _categories = [];
+    private FinancePlanForm? _form;
+    private FinancePlanDto? _selected;
+    private FinancePlanStatus _status = FinancePlanStatus.All;
+    private DateOnly? _settleDate;
+    private decimal? _payoff;
+    private ConfirmAction? _confirm;
+    private bool _loading = true, _busy;
+    private string? _error;
+    private enum ConfirmAction { Delete, Settle }
+    protected override async Task OnInitializedAsync()
+    {
+        var accounts = await Accounts.GetActiveAsync(); var categories = await Categories.GetActiveAsync();
+        _accounts = accounts.Data ?? []; _categories = categories.Data ?? [];
+        await LoadAsync(); _error ??= accounts.Error ?? categories.Error; _loading = false;
+    }
+    private void New() { _form = new(); Close(); _error = null; }
+    private void Close() { _selected = null; _confirm = null; _settleDate = null; _payoff = null; }
+    private async Task LoadAsync()
+    {
+        if (_busy) return;
+        _busy = true; _error = null;
+        try { await FetchAsync(); } finally { _busy = false; }
+    }
+    private async Task FetchAsync()
+    {
+        var result = await Operations.PlansAsync(_status);
+        if (result.Success) _items = result.Data ?? []; else _error = result.Error;
+    }
+    private async Task DetailAsync(Guid id)
+    {
+        if (_busy) return;
+        _busy = true; _error = null; Close();
+        try { var result = await Operations.PlanAsync(id); if (result.Success) { _selected = result.Data; _form = null; } else _error = result.Error; }
+        finally { _busy = false; }
+    }
+    private async Task SaveAsync()
+    {
+        if (_busy || _form is null) return;
+        if (!_accounts.Any(x => x.Id == _form.FinanceAccountId && x.IsCredit)) { _error = "Selecciona una tarjeta activa."; return; }
+        if (_form.CategoryId is null || _form.CategoryId == Guid.Empty) { _error = "Selecciona una categoría."; return; }
+        _busy = true; _error = null;
+        try { var result = await Operations.AddPlanAsync(_form); if (result.Success) { _form = null; await FetchAsync(); } else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)); }
+        finally { _busy = false; }
+    }
+    private async Task ConfirmAsync()
+    {
+        if (_busy || _selected is null || _confirm is null) return;
+        if (_confirm == ConfirmAction.Settle && _payoff <= 0) { _error = "El monto debe ser mayor que cero, o dejarse vacío."; return; }
+        _busy = true; _error = null;
+        try
+        {
+            var result = _confirm == ConfirmAction.Delete ? await Operations.DeletePlanAsync(_selected.Id) : await Operations.SettleAsync(_selected.Id, _settleDate, _payoff);
+            if (result.Success) { Close(); await FetchAsync(); }
+            else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x));
+        }
+        finally { _busy = false; }
+    }
+}

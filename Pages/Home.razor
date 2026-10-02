@@ -1,6 +1,7 @@
 @page "/inicio"
 @attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
+@inject OperationsService Operations
 
 <PageTitle>Inicio · Gastos</PageTitle>
 
@@ -46,7 +47,7 @@ else
             <div class="card-list">
                 @foreach (var card in _cards)
                 {
-                    <a class="credit-card" href="@($"cuentas/{card.Id}/tarjeta")">
+                    <a class="credit-card" href="@($"cuentas/{card.Id}/saldo")">
                         <div class="credit-card-head">
                             <span class="credit-card-bank">
                                 <Icon Name="card" Size="14" />
@@ -58,7 +59,8 @@ else
                         <div class="credit-card-body">
                             <div>
                                 <p class="credit-card-name">@card.Name</p>
-                                <p class="list-subtitle">Límite @card.CreditLimit?.ToString("C0")</p>
+                                <p class="list-subtitle">Deuda @((-card.Balance).ToString("C2"))</p>
+                                <p class="list-subtitle">Disponible @card.AvailableCredit?.ToString("C2")</p>
                             </div>
                             <CycleRing Progress="card.CycleProgress" DaysRemaining="card.DaysUntilPayment" />
                         </div>
@@ -104,7 +106,8 @@ else
                         <div class="list-lead">
                             <Glyph Name="@account.BankName" IconUrl="@account.BankIconUrl" />
                             <div>
-                                <p class="list-title">@account.Name</p>
+                                <a class="list-title" href="@($"cuentas/{account.Id}/saldo")">@account.Name</a>
+                                <p class="list-subtitle">Saldo @account.Balance.ToString("C2")</p>
                                 <p class="list-subtitle">@account.BankName · @account.AccountType.DisplayName()</p>
                             </div>
                         </div>
@@ -133,6 +136,16 @@ else
         else
         {
             var accounts = result.Data ?? [];
+            foreach (var card in accounts.Where(a => a.IsCredit))
+            {
+                var balance = await Operations.BalanceAsync(card.Id);
+                if (!balance.Success) { _error = balance.Error; break; }
+                if (balance.Data?.CurrentPeriod is { } period)
+                {
+                    card.CutDate = new DateTimeOffset(period.CutDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+                    card.PayDate = new DateTimeOffset(period.PaymentDueDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+                }
+            }
             // Las tarjetas se ordenan por urgencia de pago: es la información
             // que motiva abrir la app.
             _cards = accounts.Where(a => a.IsCredit)

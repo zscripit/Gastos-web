@@ -1,0 +1,5 @@
+@typeparam TValue
+@inherits InputDate<TValue>
+
+<input @attributes="AdditionalAttributes" type="date" class="@CssClass"
+       value="@CurrentValueAsString" @oninput="e => CurrentValueAsString = e.Value?.ToString()" />

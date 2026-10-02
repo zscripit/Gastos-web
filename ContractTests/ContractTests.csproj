@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Models/AccountModels.cs" Link="Models/AccountModels.cs" />
+    <Compile Include="../Models/Enums.cs" Link="Models/Enums.cs" />
+    <Compile Include="../Models/ApiResponse.cs" Link="Models/ApiResponse.cs" />
+    <Compile Include="../Models/OperationsModels.cs" Link="Models/OperationsModels.cs" />
+    <Compile Include="../Services/AccountService.cs" Link="Services/AccountService.cs" />
+    <Compile Include="../Services/ApiClient.cs" Link="Services/ApiClient.cs" />
+    <Compile Include="../Services/OperationsService.cs" Link="Services/OperationsService.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+.operation-form { padding: 1.25rem; margin-block: 1rem; }
+.operation-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.operation-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin-block: .85rem; }
+.operation-row { flex-wrap: wrap; gap: .75rem; }
+.operation-row > div:first-child { flex: 1 1 15rem; min-width: 0; overflow-wrap: anywhere; }
+.operation-filters summary { cursor: pointer; padding: .8rem 0; font-weight: 600; }
+.operation-filters .field { min-width: 0; }
+.balance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; }
+.balance-grid dt { font-size: .85rem; opacity: .75; }
+.balance-grid dd { margin: .35rem 0 0; font-weight: 600; }
+progress { max-width: 100%; accent-color: var(--accent, #7c6cff); }
+@media (max-width: 1023px) {
+    .nav-items { display: flex; overflow-x: auto; overscroll-behavior-x: contain; justify-content: flex-start; scrollbar-width: thin; }
+    .nav-items .tab { flex: 1 0 76px; min-width: 76px; }
+    .nav-items .tab-label { font-size: .65rem; }
+}
+@media (max-width: 420px) {
+    .operation-form { padding: .9rem; }
+    .operation-row .operation-actions { width: 100%; }
+    .operation-row .operation-actions .btn { flex: 1; }
+}

@@ -34,14 +34,16 @@ public sealed class CatalogService(ApiClient api)
 
     public async Task<ApiResult<Guid>> AddAsync(CatalogKind kind, SaveCatalogItemRequest request)
     {
-        var result = await api.PostAsync<Guid>($"/api/{Segment(kind)}", new
+        var result = await api.PostAsync<CatalogItemDto>($"/api/{Segment(kind)}", new
         {
             name = request.Name.Trim(),
             iconUrl = string.IsNullOrWhiteSpace(request.IconUrl) ? null : request.IconUrl.Trim()
         });
 
         if (result.Success) Invalidate(kind);
-        return result;
+        return result.Success && result.Data is not null
+            ? ApiResult<Guid>.Ok(result.Data.Id, result.StatusCode)
+            : ApiResult<Guid>.Fail(result.Error ?? "No se recibió el catálogo creado.", result.StatusCode, result.ValidationErrors);
     }
 
     public async Task<ApiResult<bool>> ChangeStatusAsync(CatalogKind kind, Guid id, bool isArchived)

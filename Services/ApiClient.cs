@@ -29,6 +29,9 @@ public sealed class ApiClient(HttpClient http)
     public Task<ApiResult<T>> PatchAsync<T>(string url, object body) =>
         SendAsync<T>(Build(HttpMethod.Patch, url, body));
 
+    public Task<ApiResult<T>> DeleteAsync<T>(string url) =>
+        SendAsync<T>(new HttpRequestMessage(HttpMethod.Delete, url));
+
     private static HttpRequestMessage Build(HttpMethod method, string url, object body) =>
         new(method, url) { Content = JsonContent.Create(body, options: JsonOptions) };
 
@@ -56,11 +59,16 @@ public sealed class ApiClient(HttpClient http)
             await Unauthorized.Invoke();
         }
 
-        var raw = await response.Content.ReadAsStringAsync();
+        string raw;
+        try { raw = await response.Content.ReadAsStringAsync(); }
+        catch (HttpRequestException) { return ApiResult<T>.Fail("No se pudo leer la respuesta del servidor.", status); }
+        catch (TaskCanceledException) { return ApiResult<T>.Fail("La petición tardó demasiado. Inténtalo de nuevo.", status); }
 
         if (response.IsSuccessStatusCode)
         {
             var ok = Parse<ApiResponse<T>>(raw);
+            if (ok is null && response.StatusCode != HttpStatusCode.NoContent)
+                return ApiResult<T>.Fail("El servidor devolvió una respuesta que no se pudo interpretar.", status);
             return ApiResult<T>.Ok(ok is null ? default : ok.Data, status);
         }
 
@@ -68,14 +76,14 @@ public sealed class ApiClient(HttpClient http)
         {
             var validation = Parse<ApiResponse<Dictionary<string, string[]>>>(raw);
             return ApiResult<T>.Fail(
-                validation?.Error ?? validation?.Message ?? "Revisa los datos capturados.",
+                validation?.Message ?? validation?.Error ?? "Revisa los datos capturados.",
                 status,
                 validation?.Data);
         }
 
         var failure = Parse<ApiResponse<object>>(raw);
         return ApiResult<T>.Fail(
-            failure?.Error ?? failure?.Message ?? DefaultMessage(response.StatusCode),
+            failure?.Message ?? failure?.Error ?? DefaultMessage(response.StatusCode),
             status);
     }
 

@@ -26,6 +26,10 @@ public sealed class ActiveAccountDto
     public string? BankIconUrl { get; set; }
     public decimal? CreditLimit { get; set; }
     public decimal? InterestRate { get; set; }
+    public int? CutDay { get; set; }
+    public int? PayDay { get; set; }
+    public decimal Balance { get; set; }
+    public decimal? AvailableCredit { get; set; }
     public DateTimeOffset? CutDate { get; set; }
     public DateTimeOffset? PayDate { get; set; }
     public AccountType AccountType { get; set; }
@@ -108,11 +112,13 @@ public sealed class SaveCreditAccountRequest
     [Range(0, 200, ErrorMessage = "Debe estar entre 0 y 200.")]
     public decimal? InterestRate { get; set; }
 
-    [Required(ErrorMessage = "La fecha de corte es obligatoria.")]
-    public DateTime? CutDate { get; set; }
+    [Required(ErrorMessage = "El día de corte es obligatorio.")]
+    [Range(1, 31, ErrorMessage = "El día debe estar entre 1 y 31.")]
+    public int? CutDay { get; set; }
 
-    [Required(ErrorMessage = "La fecha de pago es obligatoria.")]
-    public DateTime? PayDate { get; set; }
+    [Required(ErrorMessage = "El día de pago es obligatorio.")]
+    [Range(1, 31, ErrorMessage = "El día debe estar entre 1 y 31.")]
+    public int? PayDay { get; set; }
 
     /// <summary>Sólo se usa al editar; al crear se ignora.</summary>
     public bool IsArchived { get; set; }
@@ -128,6 +134,6 @@ public sealed class CreditAccountDto
     public string? BankIconUrl { get; set; }
     public decimal CreditLimit { get; set; }
     public decimal InterestRate { get; set; }
-    public DateTimeOffset CutDate { get; set; }
-    public DateTimeOffset PayDate { get; set; }
+    public int CutDay { get; set; }
+    public int PayDay { get; set; }
 }

@@ -55,8 +55,8 @@ else
             _model.BankId = _banks.FirstOrDefault(b => b.Name == card.BankName)?.Id;
             _model.CreditLimit = card.CreditLimit;
             _model.InterestRate = card.InterestRate;
-            _model.CutDate = card.CutDate?.DateTime.Date;
-            _model.PayDate = card.PayDate?.DateTime.Date;
+            _model.CutDay = card.CutDay;
+            _model.PayDay = card.PayDay;
         }
 
         _loading = false;
