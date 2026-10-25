@@ -26,6 +26,9 @@ builder.Services.AddScoped<AuthHeaderHandler>();
 builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
+// Comprobantes: las URLs prefirmadas del storage van sin AuthHeaderHandler para no filtrar el JWT.
+builder.Services.AddHttpClient<StorageClient>();
+
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
 builder.Services.AddAuthorizationCore(options =>
 {
@@ -43,5 +46,6 @@ builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<OperationsService>();
+builder.Services.AddScoped<AttachmentService>();
 
 await builder.Build().RunAsync();

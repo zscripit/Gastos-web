@@ -1,0 +1,114 @@
+@* Muestra un comprobante dentro de la app: imagen con <img>, PDF dibujado con pdf.js (Chrome en
+   Android no muestra PDF en un iframe) y XML como texto con formato. *@
+@using System.Xml
+@using System.Xml.Linq
+@implements IAsyncDisposable
+@inject AttachmentService AttachmentApi
+@inject IJSRuntime JS
+
+@* <dialog> con showModal(): va en la capa superior del navegador, así que un transform en un
+   contenedor (p. ej. la animación de .app-content) no lo desplaza. Un clic fuera del panel
+   cae en el propio <dialog> (su ::backdrop) y cierra. *@
+<dialog class="viewer" aria-label="@Attachment.OriginalFileName" @ref="_dialog" @onkeydown="KeyDownAsync" @onclick="CloseAsync">
+    <div class="viewer-panel" @onclick:stopPropagation="true">
+        <header class="viewer-header">
+            <div class="viewer-heading">
+                <p class="list-title">@Attachment.Type.DisplayName()</p>
+                <p class="list-subtitle">@Attachment.OriginalFileName</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" type="button" @onclick="CloseAsync">Cerrar</button>
+        </header>
+        <div class="viewer-body">
+            @if (_error is not null)
+            {
+                <Alert Message="@_error" />
+                @if (_url is not null) { <a class="btn btn-secondary" href="@_url" target="_blank" rel="noopener">Abrir en el navegador</a> }
+            }
+            else
+            {
+                @if (_loading) { <LoadingBlock /> }
+                @if (_url is not null && AttachmentRules.IsImage(Attachment.ContentType))
+                {
+                    <img class="viewer-image" src="@_url" alt="@Attachment.OriginalFileName" @onload="() => _loading = false" @onerror="ImageFailed" />
+                }
+                else if (AttachmentRules.IsPdf(Attachment.ContentType))
+                {
+                    <div class="viewer-pdf" @ref="_pdfContainer"></div>
+                }
+                else if (_xml is not null)
+                {
+                    <pre class="viewer-xml">@_xml</pre>
+                }
+            }
+        </div>
+    </div>
+</dialog>
+
+@code {
+    [Parameter, EditorRequired] public AttachmentDto Attachment { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private ElementReference _dialog, _pdfContainer;
+    private IJSObjectReference? _module;
+    private string? _url, _xml, _error;
+    private bool _loading = true, _pdfPending, _opened;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await AttachmentApi.GetUrlAsync(Attachment.Id);
+        if (!result.Success || result.Data is null) { Fail(result.Error ?? "No se pudo obtener el comprobante."); return; }
+        _url = result.Data.Url;
+
+        if (AttachmentRules.IsPdf(Attachment.ContentType)) { _pdfPending = true; return; }
+        if (!AttachmentRules.IsXml(Attachment.ContentType)) return;
+
+        var text = await AttachmentApi.GetTextAsync(_url);
+        if (text is null) { Fail("No se pudo descargar el XML."); return; }
+        try { _xml = XDocument.Parse(text).ToString(); }
+        catch (XmlException) { _xml = text; }
+        _loading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_opened)
+        {
+            _opened = true;
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/attachment-viewer.js");
+            await _module.InvokeVoidAsync("showModal", _dialog);
+        }
+        if (!_pdfPending || _url is null || _error is not null) return;
+
+        _pdfPending = false;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/attachment-viewer.js");
+            await _module.InvokeAsync<int>("renderPdf", _url, _pdfContainer);
+            _loading = false;
+        }
+        catch (JSException)
+        {
+            Fail("No se pudo mostrar el PDF.");
+        }
+        StateHasChanged();
+    }
+
+    private void ImageFailed() => Fail("No se pudo cargar la imagen.");
+
+    private void Fail(string message) { _error = message; _loading = false; }
+
+    // Escape también cierra el <dialog> nativo; aquí se avisa al padre para que lo quite del DOM.
+    private async Task KeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await CloseAsync();
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is null) return;
+        try { await _module.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}

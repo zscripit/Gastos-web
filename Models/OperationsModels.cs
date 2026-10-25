@@ -46,6 +46,8 @@ public sealed class TransactionDto
     public Guid? ServiceId { get; set; }
     public string? ServiceName { get; set; }
     public Guid? TransferId { get; set; }
+    public int AttachmentCount { get; set; }
+    public List<AttachmentDto> Attachments { get; set; } = [];
 }
 public sealed class TransactionForm
 {

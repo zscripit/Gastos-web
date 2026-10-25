@@ -35,6 +35,13 @@ app.UseCors("web");   // antes de UseAuthentication/UseAuthorization
 Si el Worker se sirve desde un dominio propio, ese es el origen que hay que
 permitir.
 
+### Requisito en el storage: CORS del bucket de R2
+
+Los comprobantes se suben y se leen directo desde el navegador, así que el
+bucket de R2 debe permitir los mismos orígenes con los métodos `PUT` (subida,
+header `content-type`) y `GET` (el visor lee PDF y XML con `fetch`). Sin esa
+regla, toda subida falla con "No se pudo subir el archivo".
+
 ## Arquitectura
 
 | Capa | Ubicación | Qué hace |
@@ -44,6 +51,7 @@ permitir.
 | Sesión | `Services/AuthService.cs`, `TokenStore.cs`, `LocalStorageService.cs`, `AuthHeaderHandler.cs`, `JwtAuthenticationStateProvider.cs` | Login/registro, guarda el JWT en localStorage, lo adjunta a cada petición y deriva los claims |
 | Features | `Services/AccountService.cs`, `CategoryService.cs`, `CatalogService.cs` | Un servicio por entidad de la API |
 | Operación | `Services/OperationsService.cs` | Servicios, movimientos, pagos de tarjeta, compras a meses y saldos |
+| Comprobantes | `Services/AttachmentService.cs`, `StorageClient.cs`, `Shared/AttachmentManager.razor`, `AttachmentViewer.razor` | Subida directa a R2 con URLs prefirmadas (sin JWT), reducción de fotos y visor en la app (pdf.js en `wwwroot/lib/pdfjs`) |
 | UI | `Pages/`, `Layout/`, `Shared/` | Pantallas y componentes reutilizables |
 
 ## Rutas

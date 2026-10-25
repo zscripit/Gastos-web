@@ -44,6 +44,7 @@ else
                     <div class="operation-actions"><button class="btn btn-primary" type="submit">@(_busy ? "Guardando…" : "Guardar")</button><button class="btn btn-secondary" type="button" @onclick="Cancel">Cancelar</button></div>
                 </fieldset>
             </EditForm>
+            <AttachmentManager @ref="_attachmentManager" TransactionId="_id" Attachments="_attachments" Disabled="_busy" OnChanged="FetchAsync" />
         </section>
     }
     <details class="section operation-filters"><summary>Filtrar movimientos</summary>
@@ -54,14 +55,14 @@ else
     </details>
     @if (_delete is not null)
     {
-        <section class="card operation-form" role="alert"><p>¿Eliminar «@_delete.Name»? Esta acción es definitiva.@(_delete.TransferId is null ? "" : " También se elimina el movimiento vinculado del pago.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="DeleteAsync">Confirmar eliminación</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _delete = null">Cancelar</button></div></section>
+        <section class="card operation-form" role="alert"><p>¿Eliminar «@_delete.Name»? Esta acción es definitiva.@(_delete.TransferId is null ? "" : " También se elimina el movimiento vinculado del pago.")@(_delete.AttachmentCount == 0 ? "" : " También se eliminan sus comprobantes.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="DeleteAsync">Confirmar eliminación</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _delete = null">Cancelar</button></div></section>
     }
     @if (_page.Items.Count == 0) { <EmptyState Title="Sin movimientos" Description="Registra un movimiento o ajusta los filtros." /> }
     else
     {
         <ul class="list">@foreach (var item in _page.Items)
         {
-            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
+            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
         }</ul>
         <div class="operation-actions"><button class="btn btn-secondary" disabled="@(_busy || _pageNumber <= 1)" @onclick="() => LoadPageAsync(_pageNumber - 1)">Anterior</button><span>Página @_pageNumber de @_page.TotalPages · @_page.TotalCount movimientos</span><button class="btn btn-secondary" disabled="@(_busy || _pageNumber >= _page.TotalPages)" @onclick="() => LoadPageAsync(_pageNumber + 1)">Siguiente</button></div>
     }
@@ -74,6 +75,8 @@ else
     private PagedTransactions _page = new();
     private TransactionForm? _form;
     private TransactionDto? _delete;
+    private List<AttachmentDto> _attachments = [];
+    private AttachmentManager? _attachmentManager;
     private readonly HashSet<Guid> _planTransactions = [];
     private bool _plansKnown;
     private Guid? _id, _accountFilter, _categoryFilter, _serviceFilter;
@@ -104,8 +107,8 @@ else
         _error ??= accounts.Error ?? allAccounts.Error ?? categories.Error ?? allCategories.Error ?? services.Error ?? allServices.Error;
         _loading = false;
     }
-    private void New() { _id = null; _linked = false; _form = new(); _error = null; _delete = null; }
-    private void Cancel() { _form = null; _id = null; }
+    private void New() { _id = null; _linked = false; _form = new(); _attachments = []; _error = null; _delete = null; }
+    private void Cancel() { _form = null; _id = null; _attachments = []; }
     private void TypeChanged() { if (_form is null) return; _form.FinanceAccountId = null; _form.CategoryId = null; _form.ServiceId = null; _form.SourceAccountId = null; }
     private async Task EditAsync(Guid id)
     {
@@ -115,7 +118,7 @@ else
         {
             var result = await Operations.TransactionAsync(id);
             if (!result.Success || result.Data is null) { _error = result.Error; return; }
-            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName;
+            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName; _attachments = item.Attachments;
             _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
             if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
             if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
@@ -129,13 +132,29 @@ else
         if (_form.FinanceAccountId is null || _form.FinanceAccountId == Guid.Empty) { _error = "Selecciona una cuenta."; return; }
         if (_form.TransactionType != TransactionType.Payment && !_linked && (_form.CategoryId is null || _form.CategoryId == Guid.Empty)) { _error = "Selecciona una categoría."; return; }
         _busy = true; _error = null;
+        Guid? created = null; string? attachmentError = null;
         try
         {
             var result = await Operations.SaveTransactionAsync(_form, _id);
-            if (result.Success) { Cancel(); await FetchAsync(); }
+            if (result.Success)
+            {
+                // Los comprobantes de un movimiento nuevo se suben ya que existe en el servidor.
+                if (_id is null && result.Data is not null && _attachmentManager?.HasStaged == true)
+                {
+                    created = result.Data.Id;
+                    attachmentError = await _attachmentManager.UploadStagedAsync(created.Value);
+                }
+                Cancel(); await FetchAsync();
+            }
             else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)) + (result.StatusCode == 409 ? " Si pertenece a una compra a meses, adminístrala desde Compras a meses." : "");
         }
         finally { _busy = false; }
+        // Si algún comprobante falló, se abre el movimiento ya guardado para reintentar desde ahí.
+        if (attachmentError is not null && created is Guid id)
+        {
+            await EditAsync(id);
+            _error = "El movimiento se guardó, pero " + char.ToLower(attachmentError[0]) + attachmentError[1..];
+        }
     }
     private async Task DeleteAsync()
     {

@@ -1,0 +1,246 @@
+@* Comprobantes de un movimiento. Con TransactionId sube y borra al momento; sin él (movimiento
+   nuevo) solo junta los archivos y la página los sube con UploadStagedAsync después de guardar. *@
+@inject AttachmentService AttachmentApi
+@inject OperationsService Operations
+
+<div class="attachments">
+    <h3 class="attachments-title">Comprobantes</h3>
+    <Alert Message="@_error" />
+    @if (_items.Count == 0 && _staged.Count == 0)
+    {
+        <p class="field-hint">Sin comprobantes. Puedes adjuntar la factura (PDF y XML), el ticket, el comprobante de pago y hasta 3 archivos más.</p>
+    }
+    else
+    {
+        <ul class="attachment-list">
+            @foreach (var item in _items)
+            {
+                <li class="attachment-item" @key="item.Id">
+                    <div class="attachment-info">
+                        <p class="list-title">@item.Type.DisplayName() @if (item.Status == AttachmentStatus.Pending) { <span class="badge badge-warning">Subida incompleta</span> }</p>
+                        <p class="list-subtitle">@item.OriginalFileName · @AttachmentRules.FormatSize(item.SizeBytes)</p>
+                    </div>
+                    <div class="attachment-actions">
+                        @if (_deleteId == item.Id)
+                        {
+                            <button class="btn btn-danger btn-sm" type="button" disabled="@Busy" @onclick="() => DeleteAsync(item)">Confirmar eliminación</button>
+                            <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => _deleteId = null">Cancelar</button>
+                        }
+                        else
+                        {
+                            @if (item.Status == AttachmentStatus.Uploaded)
+                            {
+                                <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => _viewing = item">Ver</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => VerifyAsync(item)">Verificar</button>
+                            }
+                            <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => _deleteId = item.Id">Eliminar</button>
+                        }
+                    </div>
+                </li>
+            }
+            @foreach (var file in _staged)
+            {
+                <li class="attachment-item">
+                    <div class="attachment-info">
+                        <p class="list-title">@file.Type.DisplayName() <span class="badge badge-neutral">Se sube al guardar</span></p>
+                        <p class="list-subtitle">@file.FileName · @AttachmentRules.FormatSize(file.Data.LongLength)</p>
+                    </div>
+                    <div class="attachment-actions"><button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => Unstage(file)">Quitar</button></div>
+                </li>
+            }
+        </ul>
+    }
+    @if (_progress is not null) { <LoadingBlock Text="@_progress" /> }
+    @if (FreeTypes.Any())
+    {
+        <div class="attachment-add">
+            <label class="field"><span class="field-label">Tipo de comprobante</span>
+                <select class="input" @bind="_type" disabled="@Busy">@foreach (var type in FreeTypes) { <option value="@type">@type.DisplayName()</option> }</select>
+            </label>
+            <label class="btn btn-secondary attachment-picker" aria-disabled="@Busy">
+                Elegir archivo
+                <InputFile @key="_inputKey" class="attachment-input" OnChange="FileSelectedAsync" accept="@AttachmentRules.Accept(_type)" disabled="@Busy" />
+            </label>
+        </div>
+        <p class="field-hint">@Hint(_type) Hasta 10 MB; las fotos grandes se reducen antes de subirlas.</p>
+    }
+</div>
+@if (_viewing is not null)
+{
+    <AttachmentViewer @key="_viewing.Id" Attachment="_viewing" OnClose="() => _viewing = null" />
+}
+
+@code {
+    [Parameter] public Guid? TransactionId { get; set; }
+    [Parameter] public IReadOnlyList<AttachmentDto> Attachments { get; set; } = [];
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Se dispara cuando cambian los comprobantes guardados, para refrescar el conteo de la lista.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private List<AttachmentDto> _items = [];
+    private readonly List<StagedAttachment> _staged = [];
+    private AttachmentType _type = AttachmentType.InvoicePdf;
+    private AttachmentDto? _viewing;
+    private Guid? _deleteId, _loadedFor;
+    private bool _initialized, _busy;
+    private int _inputKey;
+    private string? _error, _progress;
+
+    private bool Busy => _busy || Disabled;
+    public bool HasStaged => _staged.Count > 0;
+
+    private IEnumerable<AttachmentType> FreeTypes => AttachmentRules.Types.Where(t =>
+        _items.Count(x => x.Type == t) + _staged.Count(x => x.Type == t) < AttachmentRules.MaxSlots(t));
+
+    protected override void OnParametersSet()
+    {
+        if (_initialized && _loadedFor == TransactionId) return;
+        _initialized = true; _loadedFor = TransactionId;
+        _items = Attachments.ToList(); _staged.Clear(); _deleteId = null; _viewing = null; _error = null;
+        EnsureType();
+    }
+
+    /// <summary>Sube los archivos juntados mientras el movimiento era nuevo. null si todos subieron; si no, el error a mostrar.</summary>
+    public async Task<string?> UploadStagedAsync(Guid transactionId)
+    {
+        if (_staged.Count == 0) return null;
+        _busy = true; _progress = "Subiendo comprobantes…"; StateHasChanged();
+        try
+        {
+            var results = await AttachmentApi.UploadAsync(transactionId, _staged.ToList());
+            _staged.Clear();
+            var failed = results.Where(r => !r.Success).ToList();
+            return failed.Count == 0 ? null
+                : "No se pudieron subir algunos comprobantes: " + string.Join("; ", failed.Select(f => $"{f.File.FileName} ({f.Error?.Trim()})"));
+        }
+        finally { _busy = false; _progress = null; }
+    }
+
+    private async Task FileSelectedAsync(InputFileChangeEventArgs e)
+    {
+        _error = null; _deleteId = null;
+        var type = _type;
+        _busy = true; _progress = "Preparando archivo…";
+        try
+        {
+            var (file, error) = await PrepareAsync(e.File, type);
+            if (file is null) { _error = error; return; }
+            if (TransactionId is not Guid transactionId) { _staged.Add(file); return; }
+
+            _progress = $"Subiendo {file.FileName}…"; StateHasChanged();
+            var result = (await AttachmentApi.UploadAsync(transactionId, [file]))[0];
+            if (!result.Success) _error = result.Error;
+            await RefreshAsync();
+        }
+        finally
+        {
+            // Un InputFile nuevo permite volver a elegir el mismo archivo. Solo al final: el archivo
+            // vive en el elemento del DOM y no se puede leer si el InputFile se reemplaza antes.
+            _inputKey++; _busy = false; _progress = null; EnsureType();
+        }
+    }
+
+    private async Task VerifyAsync(AttachmentDto item)
+    {
+        if (TransactionId is not Guid transactionId) return;
+        _busy = true; _error = null;
+        try
+        {
+            var result = await AttachmentApi.ConfirmAsync(transactionId, item.Id);
+            if (!result.Success)
+                _error = result.StatusCode == 409 ? "El archivo no llegó al almacenamiento. Elimínalo y vuelve a subirlo." : result.Error;
+            await RefreshAsync();
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(AttachmentDto item)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            var result = await AttachmentApi.DeleteAsync(item.Id);
+            if (!result.Success) _error = result.Error;
+            _deleteId = null;
+            await RefreshAsync();
+        }
+        finally { _busy = false; EnsureType(); }
+    }
+
+    private void Unstage(StagedAttachment file) { _staged.Remove(file); EnsureType(); }
+
+    private async Task RefreshAsync()
+    {
+        if (TransactionId is not Guid transactionId) return;
+        var detail = await Operations.TransactionAsync(transactionId);
+        if (detail.Success && detail.Data is not null) _items = detail.Data.Attachments;
+        else _error ??= detail.Error;
+        await OnChanged.InvokeAsync();
+    }
+
+    private void EnsureType()
+    {
+        if (!FreeTypes.Contains(_type)) _type = FreeTypes.FirstOrDefault(AttachmentType.InvoicePdf);
+    }
+
+    private static async Task<(StagedAttachment? File, string? Error)> PrepareAsync(IBrowserFile file, AttachmentType type)
+    {
+        var name = file.Name;
+        var contentType = AttachmentRules.ResolveContentType(type, file.ContentType, name);
+        var acceptsImages = AttachmentRules.AllowedContentTypes(type).Contains("image/jpeg");
+        var isHeic = file.ContentType is "image/heic" or "image/heif"
+                     || Path.GetExtension(name).ToLowerInvariant() is ".heic" or ".heif";
+
+        // Las fotos del teléfono suelen pesar varios MB: se pasan a JPEG con el lado mayor acotado.
+        // HEIC solo se acepta si el navegador puede convertirlo (Safari sí, Chrome normalmente no).
+        if (acceptsImages && (isHeic || (contentType is not null && AttachmentRules.IsImage(contentType) && file.Size > AttachmentRules.ImageReduceThresholdBytes)))
+        {
+            try
+            {
+                var reduced = await file.RequestImageFileAsync("image/jpeg", AttachmentRules.ImageMaxDimension, AttachmentRules.ImageMaxDimension);
+                if (isHeic || reduced.Size < file.Size)
+                {
+                    file = reduced; contentType = "image/jpeg"; name = Path.ChangeExtension(name, ".jpg");
+                }
+            }
+            catch (Exception) when (!isHeic)
+            {
+                // Si no se puede reducir, se intenta subir el original.
+            }
+            catch (Exception)
+            {
+                return (null, "Este navegador no puede convertir fotos HEIC. Elige una foto JPEG o PNG.");
+            }
+        }
+
+        if (contentType is null)
+            return (null, $"Ese tipo de archivo no se permite como {type.DisplayName()}. {Hint(type)}");
+        if (file.Size == 0)
+            return (null, "El archivo está vacío.");
+        if (file.Size > AttachmentRules.MaxFileSizeBytes)
+            return (null, "El archivo pesa más de 10 MB.");
+
+        try
+        {
+            await using var stream = file.OpenReadStream(AttachmentRules.MaxFileSizeBytes);
+            using var buffer = new MemoryStream((int)file.Size);
+            await stream.CopyToAsync(buffer);
+            return (new StagedAttachment { Type = type, FileName = name, ContentType = contentType, Data = buffer.ToArray() }, null);
+        }
+        catch (Exception ex) when (ex is IOException or JSException)
+        {
+            return (null, "No se pudo leer el archivo. Inténtalo de nuevo.");
+        }
+    }
+
+    private static string Hint(AttachmentType type) => type switch
+    {
+        AttachmentType.InvoicePdf => "La factura PDF debe ser un archivo .pdf.",
+        AttachmentType.InvoiceXml => "La factura XML debe ser un archivo .xml.",
+        _ => "Se acepta foto (JPEG, PNG o WebP) o PDF."
+    };
+}

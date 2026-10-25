@@ -27,12 +27,72 @@ internal static class MockPreview
             new() { Id = purchaseId, Name = "Laptop a meses", Amount = 1200, Date = DateTimeOffset.Now, TransactionType = TransactionType.Expense, FinanceAccountId = cardId, FinanceAccountName = "Tarjeta de prueba", CategoryId = categoryId, CategoryName = "Compras" }
         };
         var plans = new List<FinancePlanDto> { new() { Id = planId, Name = "Laptop a meses", Amount = 1200, Total = 1200, Months = 12, AmountPerMonth = 100, Date = DateTimeOffset.Now, FinanceAccountId = cardId, FinanceAccountName = "Tarjeta de prueba", CategoryId = categoryId, CategoryName = "Compras", TransactionId = purchaseId, RemainingAmount = 1200, NextInstallmentDate = DateOnly.FromDateTime(DateTime.Today.AddMonths(1)), Installments = Enumerable.Range(1, 12).Select(i => new InstallmentDto { Id = Guid.NewGuid(), Number = i, Amount = 100, Date = DateOnly.FromDateTime(DateTime.Today.AddMonths(i)), Charged = false }).ToList() } };
+        // Comprobantes: metadatos por movimiento y archivos en memoria; /storage hace de R2.
+        var attachments = new List<(Guid TransactionId, AttachmentDto Meta, byte[]? File)> {
+            (transactions[0].Id, new AttachmentDto { Id = Guid.NewGuid(), Type = AttachmentType.Voucher, OriginalFileName = "voucher-sin-confirmar.jpg", ContentType = "image/jpeg", SizeBytes = 2048, Status = AttachmentStatus.Pending, CreatedAt = DateTimeOffset.Now.AddHours(-1) }, null)
+        };
+        void SyncAttachments()
+        {
+            foreach (var item in transactions)
+            {
+                item.Attachments = attachments.Where(a => a.TransactionId == item.Id).Select(a => a.Meta).OrderBy(a => a.Type).ToList();
+                item.AttachmentCount = item.Attachments.Count(a => a.Status == AttachmentStatus.Uploaded);
+            }
+        }
+        app.MapPut("/storage/{id:guid}", async (Guid id, HttpContext context) =>
+        {
+            var index = attachments.FindIndex(a => a.Meta.Id == id);
+            if (index < 0) return Results.NotFound();
+            using var buffer = new MemoryStream(); await context.Request.Body.CopyToAsync(buffer);
+            attachments[index] = attachments[index] with { File = buffer.ToArray() };
+            return Results.Ok();
+        });
+        app.MapGet("/storage/{id:guid}", (Guid id) => attachments.FirstOrDefault(a => a.Meta.Id == id) is { File: { } file } found
+            ? Results.File(file, found.Meta.ContentType) : Results.NotFound());
         app.MapGet("/appsettings.json", () => Results.Json(new { ApiBaseUrl = "http://localhost:15025" }));
         app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "PATCH", "DELETE"], async (HttpContext context) =>
         {
             var path = context.Request.Path.Value!;
             object? data = null;
-            if (path == "/api/Auth/Login")
+            var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (path.StartsWith("/api/Transaction/") && path.EndsWith("/Attachments") && context.Request.Method == "POST")
+            {
+                var transactionId = Guid.Parse(segments[2]);
+                var body = await context.Request.ReadFromJsonAsync<JsonElement>();
+                var tickets = new List<object>();
+                foreach (var item in body.GetProperty("attachments").EnumerateArray())
+                {
+                    var type = (AttachmentType)item.GetProperty("type").GetInt32();
+                    if (attachments.Count(a => a.TransactionId == transactionId && a.Meta.Type == type) >= AttachmentRules.MaxSlots(type))
+                    {
+                        context.Response.StatusCode = 409;
+                        await context.Response.WriteAsJsonAsync(new { error = "AttachmentLimitReached", message = "La transacción ya tiene el máximo de comprobantes de ese tipo" });
+                        return;
+                    }
+                    var meta = new AttachmentDto { Id = Guid.NewGuid(), Type = type, OriginalFileName = item.GetProperty("fileName").GetString()!, ContentType = item.GetProperty("contentType").GetString()!, SizeBytes = item.GetProperty("sizeBytes").GetInt64(), Status = AttachmentStatus.Pending, CreatedAt = DateTimeOffset.Now };
+                    attachments.Add((transactionId, meta, null));
+                    tickets.Add(new { attachmentId = meta.Id, type, slot = 1, uploadUrl = $"http://localhost:15025/storage/{meta.Id}", uploadMethod = "PUT", uploadHeaders = new Dictionary<string, string> { ["Content-Type"] = meta.ContentType }, expiresAt = DateTimeOffset.UtcNow.AddMinutes(15) });
+                }
+                context.Response.StatusCode = 201; data = tickets;
+            }
+            else if (path.EndsWith("/Confirm"))
+            {
+                var index = attachments.FindIndex(a => a.Meta.Id == Guid.Parse(segments[4]));
+                if (index < 0 || attachments[index].File is null)
+                {
+                    context.Response.StatusCode = 409;
+                    await context.Response.WriteAsJsonAsync(new { error = "AttachmentFileNotUploaded", message = "El archivo del comprobante todavía no se ha subido" });
+                    return;
+                }
+                var meta = attachments[index].Meta; meta.Status = AttachmentStatus.Uploaded; meta.UploadedAt = DateTimeOffset.Now; data = meta;
+            }
+            else if (path.StartsWith("/api/Attachment/"))
+            {
+                var id = Guid.Parse(segments[2]);
+                if (context.Request.Method == "DELETE") { attachments.RemoveAll(a => a.Meta.Id == id); data = id; }
+                else data = new { url = $"http://localhost:15025/storage/{id}", expiresAt = DateTimeOffset.UtcNow.AddMinutes(10) };
+            }
+            else if (path == "/api/Auth/Login")
             {
                 string Encode(object value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))).TrimEnd('=').Replace('+', '-').Replace('/', '_');
                 var token = Encode(new { alg = "none" }) + "." + Encode(new { sub = "fixture", name = "Usuario de prueba", email = "prueba@example.test", role = "User", exp = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeSeconds() }) + ".fixture";
@@ -71,7 +131,7 @@ internal static class MockPreview
                 else
                 {
                     var item = transactions.First(x => x.Id.ToString() == path.Split('/').Last());
-                    if (context.Request.Method == "DELETE") { transactions.Remove(item); data = new[] { item.Id }; }
+                    if (context.Request.Method == "DELETE") { transactions.Remove(item); attachments.RemoveAll(a => a.TransactionId == item.Id); data = new[] { item.Id }; }
                     else if (context.Request.Method == "PUT") { var form = await context.Request.ReadFromJsonAsync<TransactionForm>(); item.Name = form!.Name; item.Amount = form.Amount; data = item; }
                     else data = item;
                 }
@@ -84,6 +144,7 @@ internal static class MockPreview
                 else data = path == "/api/FinancePlan" ? plans : plans.First();
             }
             else { context.Response.StatusCode = 404; }
+            SyncAttachments();
             await context.Response.WriteAsJsonAsync(new { data });
         });
         using var frontend = new HttpClient();
