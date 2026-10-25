@@ -1,0 +1,38 @@
+# Despliega a Cloudflare Workers (static assets) en cada commit nuevo en main:
+# merge de PR o push directo. Ninguna otra rama dispara un despliegue.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Publicado fuera de Development, así que Blazor carga
+      # wwwroot/appsettings.Production.json con la URL de gastos-api.
+      - name: Publish
+        run: dotnet publish GastosApp.Web.csproj -c Release -o out
+
+      # Usa wrangler.jsonc: sube out/wwwroot como static assets del Worker.
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
