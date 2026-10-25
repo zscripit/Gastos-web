@@ -30,9 +30,11 @@ jobs:
         run: dotnet publish GastosApp.Web.csproj -c Release -o out
 
       # Usa wrangler.jsonc: sube out/wwwroot como static assets del Worker.
+      # La action instala Wrangler 3 por defecto, que no acepta Workers sin `main`.
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
+          wranglerVersion: "4.152.0"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
