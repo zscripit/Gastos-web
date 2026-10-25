@@ -1,0 +1,11 @@
+// Worker solo de static assets: sirve la salida de `dotnet publish` sin script propio.
+// Las peticiones a assets son gratis y no cuentan como invocaciones del Worker.
+{
+  "name": "gastosapp-web",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./out/wwwroot",
+    // Rutas como /transacciones/5 regresan index.html al recargar y Blazor resuelve la ruta.
+    "not_found_handling": "single-page-application"
+  }
+}
