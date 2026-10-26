@@ -14,6 +14,27 @@ export function showModal(dialog) {
     if (!dialog.open) dialog.showModal();
 }
 
+// La URL firmada es de otro origen, así que el atributo download de un enlace directo se ignora:
+// se baja el archivo como blob (el CORS del storage ya permite GET) y se guarda con su nombre original.
+export async function download(url, fileName) {
+    let href;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(response.status);
+        href = URL.createObjectURL(await response.blob());
+    } catch {
+        window.open(url, '_blank', 'noopener');
+        return;
+    }
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 30000);
+}
+
 export async function renderPdf(url, container) {
     const lib = await loadPdfJs();
     container.replaceChildren();

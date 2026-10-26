@@ -16,7 +16,10 @@
                 <p class="list-title">@Attachment.Type.DisplayName()</p>
                 <p class="list-subtitle">@Attachment.OriginalFileName</p>
             </div>
-            <button class="btn btn-secondary btn-sm" type="button" @onclick="CloseAsync">Cerrar</button>
+            <div class="viewer-actions">
+                <button class="btn btn-secondary btn-sm" type="button" disabled="@(_url is null || _downloading)" @onclick="DownloadAsync">@(_downloading ? "Descargando…" : "Descargar")</button>
+                <button class="btn btn-secondary btn-sm" type="button" @onclick="CloseAsync">Cerrar</button>
+            </div>
         </header>
         <div class="viewer-body">
             @if (_error is not null)
@@ -51,7 +54,7 @@
     private ElementReference _dialog, _pdfContainer;
     private IJSObjectReference? _module;
     private string? _url, _xml, _error;
-    private bool _loading = true, _pdfPending, _opened;
+    private bool _loading = true, _pdfPending, _opened, _downloading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,6 +94,19 @@
             Fail("No se pudo mostrar el PDF.");
         }
         StateHasChanged();
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (_url is null) return;
+        _downloading = true;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/attachment-viewer.js");
+            await _module.InvokeVoidAsync("download", _url, Attachment.OriginalFileName);
+        }
+        catch (JSException) { _error = "No se pudo descargar el comprobante."; }
+        finally { _downloading = false; }
     }
 
     private void ImageFailed() => Fail("No se pudo cargar la imagen.");

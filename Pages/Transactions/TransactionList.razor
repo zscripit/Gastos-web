@@ -14,9 +14,32 @@
 else
 {
     <div class="operation-actions"><button class="btn btn-primary" type="button" disabled="@_busy" @onclick="New">Registrar movimiento</button><a class="btn btn-secondary" href="planes">Compras a meses</a></div>
+    @if (_detail is { } detail)
+    {
+        <section class="section card operation-form operation-detail" tabindex="-1" @ref="_panel" aria-label="Detalle del movimiento">
+            <h2 class="section-title">Detalle del movimiento</h2>
+            <p class="detail-name">@detail.Name</p>
+            <p class="detail-amount @(detail.TransactionType == TransactionType.Income ? "is-income" : null)">@detail.Amount.ToString("C2")</p>
+            <dl class="detail-grid">
+                <div><dt>Tipo</dt><dd>@TypeLabel(detail.TransactionType)</dd></div>
+                <div><dt>Fecha</dt><dd>@detail.Date.ToLocalTime().ToString("dd MMM yyyy")</dd></div>
+                <div><dt>Cuenta</dt><dd>@detail.FinanceAccountName</dd></div>
+                @if (!string.IsNullOrEmpty(detail.CategoryName)) { <div><dt>Categoría</dt><dd>@detail.CategoryName</dd></div> }
+                @if (!string.IsNullOrEmpty(detail.ServiceName)) { <div><dt>Servicio</dt><dd>@detail.ServiceName</dd></div> }
+                @if (!string.IsNullOrWhiteSpace(detail.Description)) { <div class="detail-wide"><dt>Descripción</dt><dd>@detail.Description</dd></div> }
+            </dl>
+            @if (detail.TransferId is not null) { <p class="field-hint">Forma parte de un pago de tarjeta con un movimiento vinculado.</p> }
+            <div class="operation-actions">
+                @if (_planTransactions.Contains(detail.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> }
+                else { <button class="btn btn-primary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(detail.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => ConfirmDelete(detail)">Eliminar</button> }
+                <button class="btn btn-secondary" type="button" @onclick="Cancel">Cerrar</button>
+            </div>
+            <AttachmentManager TransactionId="detail.Id" Attachments="detail.Attachments" ReadOnly="true" />
+        </section>
+    }
     @if (_form is not null)
     {
-        <section class="section card operation-form">
+        <section class="section card operation-form" tabindex="-1" @ref="_panel">
             <h2 class="section-title">@(_id is null ? "Nuevo movimiento" : "Editar movimiento")</h2>
             <EditForm Model="_form" OnValidSubmit="SaveAsync" FormName="transaction">
                 <DataAnnotationsValidator /><ValidationSummary />
@@ -75,7 +98,7 @@ else
     {
         <ul class="list">@foreach (var item in _page.Items)
         {
-            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
+            <li class="list-item operation-row is-clickable" role="button" tabindex="0" title="Ver detalle" @onclick="() => OpenDetailAsync(item.Id)" @onkeydown="e => OpenDetailByKeyAsync(e, item.Id)"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</div><div class="operation-actions" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
         }</ul>
         <div class="operation-actions"><button class="btn btn-secondary" disabled="@(_busy || _pageNumber <= 1)" @onclick="() => LoadPageAsync(_pageNumber - 1)">Anterior</button><span>Página @_pageNumber de @_page.TotalPages · @_page.TotalCount movimientos</span><button class="btn btn-secondary" disabled="@(_busy || _pageNumber >= _page.TotalPages)" @onclick="() => LoadPageAsync(_pageNumber + 1)">Siguiente</button></div>
     }
@@ -90,6 +113,9 @@ else
     private List<ServiceDto> _services = [], _allServices = [];
     private PagedTransactions _page = new();
     private TransactionForm? _form;
+    private TransactionDto? _detail;
+    private ElementReference _panel;
+    private bool _focusPanel;
     private TransactionDto? _delete;
     private Guid? _discard;
     private string? _info;
@@ -134,8 +160,42 @@ else
         _loading = false;
         if (Nuevo) New();
     }
-    private void New() { _id = null; _linked = false; _form = new(); _attachments = []; _error = null; _delete = null; }
-    private void Cancel() { _form = null; _id = null; _attachments = []; }
+    private void New() { _id = null; _linked = false; _form = new(); _attachments = []; _error = null; _delete = null; _detail = null; _focusPanel = true; }
+    private void Cancel() { _form = null; _id = null; _attachments = []; _detail = null; }
+
+    // El detalle y el formulario se muestran arriba de la lista: se enfocan para que el navegador los
+    // traiga a la vista aunque la tarjeta tocada esté más abajo.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusPanel || (_detail is null && _form is null)) return;
+        _focusPanel = false;
+        try { await _panel.FocusAsync(); } catch (JSException) { }
+    }
+
+    private async Task OpenDetailAsync(Guid id)
+    {
+        if (_busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            var result = await Operations.TransactionAsync(id);
+            if (!result.Success || result.Data is null) { _error = result.Error; return; }
+            Cancel(); _delete = null;
+            _detail = result.Data; _focusPanel = true;
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task OpenDetailByKeyAsync(KeyboardEventArgs e, Guid id)
+    {
+        if (e.Key is "Enter" or " ") await OpenDetailAsync(id);
+    }
+
+    private void ConfirmDelete(TransactionDto detail)
+    {
+        detail.AttachmentCount = Math.Max(detail.AttachmentCount, detail.Attachments.Count);
+        _delete = detail;
+    }
     private void TypeChanged() { if (_form is null) return; _form.FinanceAccountId = null; _form.CategoryId = null; _form.ServiceId = null; _form.SourceAccountId = null; }
     private async Task EditAsync(Guid id)
     {
@@ -145,7 +205,7 @@ else
         {
             var result = await Operations.TransactionAsync(id);
             if (!result.Success || result.Data is null) { _error = result.Error; return; }
-            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName; _attachments = item.Attachments;
+            var item = result.Data; _detail = null; _focusPanel = true; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName; _attachments = item.Attachments;
             _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
             if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
             if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
