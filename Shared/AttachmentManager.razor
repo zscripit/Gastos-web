@@ -6,7 +6,11 @@
 <div class="attachments">
     <h3 class="attachments-title">Comprobantes</h3>
     <Alert Message="@_error" />
-    @if (_items.Count == 0 && _staged.Count == 0)
+    @if (_items.Count == 0 && _staged.Count == 0 && ReadOnly)
+    {
+        <p class="field-hint">Sin comprobantes.</p>
+    }
+    else if (_items.Count == 0 && _staged.Count == 0)
     {
         <p class="field-hint">Sin comprobantes. Puedes adjuntar la factura (PDF y XML), el ticket, el comprobante de pago y hasta 3 archivos más.</p>
     }
@@ -15,12 +19,20 @@
         <ul class="attachment-list">
             @foreach (var item in _items)
             {
-                <li class="attachment-item" @key="item.Id">
+                var viewable = item.Status == AttachmentStatus.Uploaded;
+                <li class="attachment-item @(viewable ? "is-clickable" : null)" @key="item.Id" role="@(viewable ? "button" : null)" tabindex="@(viewable ? "0" : null)"
+                    title="@(viewable ? "Ver comprobante" : null)" @onclick="() => View(item)" @onkeydown="e => ViewByKey(e, item)">
                     <div class="attachment-info">
                         <p class="list-title">@item.Type.DisplayName() @if (item.Status == AttachmentStatus.Pending) { <span class="badge badge-warning">Subida incompleta</span> }</p>
                         <p class="list-subtitle">@item.OriginalFileName · @AttachmentRules.FormatSize(item.SizeBytes)</p>
                     </div>
-                    <div class="attachment-actions">
+                    @if (ReadOnly)
+                    {
+                        @if (viewable) { <span class="attachment-open" aria-hidden="true">Ver ›</span> }
+                    }
+                    else
+                    {
+                    <div class="attachment-actions" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true">
                         @if (_deleteId == item.Id)
                         {
                             <button class="btn btn-danger btn-sm" type="button" disabled="@Busy" @onclick="() => DeleteAsync(item)">Confirmar eliminación</button>
@@ -28,17 +40,14 @@
                         }
                         else
                         {
-                            @if (item.Status == AttachmentStatus.Uploaded)
-                            {
-                                <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => _viewing = item">Ver</button>
-                            }
-                            else
+                            @if (!viewable)
                             {
                                 <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => VerifyAsync(item)">Verificar</button>
                             }
                             <button class="btn btn-secondary btn-sm" type="button" disabled="@Busy" @onclick="() => _deleteId = item.Id">Eliminar</button>
                         }
                     </div>
+                    }
                 </li>
             }
             @foreach (var file in _staged)
@@ -54,7 +63,7 @@
         </ul>
     }
     @if (_progress is not null) { <LoadingBlock Text="@_progress" /> }
-    @if (FreeTypes.Any())
+    @if (!ReadOnly && FreeTypes.Any())
     {
         <div class="attachment-add">
             <label class="field"><span class="field-label">Tipo de comprobante</span>
@@ -77,6 +86,9 @@
     [Parameter] public Guid? TransactionId { get; set; }
     [Parameter] public IReadOnlyList<AttachmentDto> Attachments { get; set; } = [];
     [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Solo lista y abre los comprobantes (vista de detalle): sin subir ni eliminar.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
 
     /// <summary>Se dispara cuando cambian los comprobantes guardados, para refrescar el conteo de la lista.</summary>
     [Parameter] public EventCallback OnChanged { get; set; }
@@ -169,6 +181,16 @@
             await RefreshAsync();
         }
         finally { _busy = false; EnsureType(); }
+    }
+
+    private void View(AttachmentDto item)
+    {
+        if (item.Status == AttachmentStatus.Uploaded && _deleteId != item.Id) _viewing = item;
+    }
+
+    private void ViewByKey(KeyboardEventArgs e, AttachmentDto item)
+    {
+        if (e.Key is "Enter" or " ") View(item);
     }
 
     private void Unstage(StagedAttachment file) { _staged.Remove(file); EnsureType(); }

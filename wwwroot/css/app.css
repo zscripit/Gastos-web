@@ -880,8 +880,8 @@ select.input {
     /* La barra deja de flotar sobre el contenido y pasa a ocupar su columna. */
     .nav {
         position: sticky;
-        top: 0;
-        inset: auto;
+        /* inset completo (no top + inset: auto, que anulaba el top y la barra dejaba de quedarse fija). */
+        inset: 0 auto auto 0;
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
