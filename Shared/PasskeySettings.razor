@@ -1,0 +1,112 @@
+@* Acceso con huella o rostro: passkeys registradas y alta del dispositivo actual. *@
+@inject PasskeyService Passkeys
+@inject IJSRuntime JS
+
+<section class="section settings-section">
+    <h2 class="section-title">Acceso con huella o rostro</h2>
+    @if (_passkeys.Count == 0 && !_loading)
+    {
+        <p class="field-hint">Entra sin escribir tu contraseña usando la huella, el rostro o el PIN de tu dispositivo.</p>
+    }
+    <ul class="list">
+        @foreach (var passkey in _passkeys)
+        {
+            <li class="list-item settings-item" @key="passkey.Id">
+                <div>
+                    <p class="list-title">@passkey.Name</p>
+                    <p class="list-subtitle">Activado el @passkey.CreatedAt.ToLocalTime().ToString("d MMM yyyy")@(passkey.LastUsedAt is { } used ? $" · último uso {used.ToLocalTime():d MMM yyyy}" : "")</p>
+                </div>
+                @if (_deleteId == passkey.Id)
+                {
+                    <div class="operation-actions">
+                        <button class="btn btn-danger btn-sm" type="button" disabled="@_busy" @onclick="() => DeleteAsync(passkey)">Confirmar</button>
+                        <button class="btn btn-secondary btn-sm" type="button" disabled="@_busy" @onclick="() => _deleteId = null">Cancelar</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-secondary btn-sm" type="button" disabled="@_busy" @onclick="() => _deleteId = passkey.Id">Quitar</button>
+                }
+            </li>
+        }
+    </ul>
+    @if (_available)
+    {
+        <button class="btn btn-secondary btn-block" type="button" disabled="@_busy" @onclick="RegisterAsync">Activar en este dispositivo</button>
+    }
+    else if (!_loading)
+    {
+        <p class="field-hint">Este dispositivo o navegador no tiene huella, rostro o PIN disponible para la app.</p>
+    }
+    <Alert Message="@_message" Kind="@_kind" />
+</section>
+
+@code {
+    private List<PasskeyDto> _passkeys = [];
+    private bool _available, _loading = true, _busy;
+    private Guid? _deleteId;
+    private string? _message;
+    private string _kind = "error";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _available = await Passkeys.IsAvailableAsync();
+        if (_available) await Passkeys.PrepareRegistrationAsync();
+        await LoadAsync();
+        _loading = false;
+    }
+
+    private async Task LoadAsync()
+    {
+        var result = await Passkeys.ListAsync();
+        if (result.Success) _passkeys = result.Data ?? [];
+        else Show(result.Error, null);
+    }
+
+    private async Task RegisterAsync()
+    {
+        _busy = true; _message = null;
+        try
+        {
+            var error = await Passkeys.RegisterAsync();
+            Show(error, "Listo: la próxima vez entra con tu huella o rostro.");
+            await LoadAsync();
+            await Passkeys.PrepareRegistrationAsync();
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(PasskeyDto passkey)
+    {
+        _busy = true; _message = null;
+        try
+        {
+            var result = await Passkeys.DeleteAsync(passkey.Id);
+            Show(result.Success ? null : result.Error, "Se quitó el acceso de ese dispositivo.");
+            _deleteId = null;
+            await LoadAsync();
+        }
+        finally { _busy = false; }
+    }
+
+    // Nombre reconocible del dispositivo a partir del navegador (solo para mostrarlo en esta lista).
+    private async Task<string> DeviceNameAsync()
+    {
+        var agent = await JS.InvokeAsync<string>("eval", "navigator.userAgent");
+        return agent switch
+        {
+            _ when agent.Contains("iPhone") => "iPhone",
+            _ when agent.Contains("iPad") => "iPad",
+            _ when agent.Contains("Android") => "Android",
+            _ when agent.Contains("Mac OS") => "Mac",
+            _ when agent.Contains("Windows") => "Windows",
+            _ => "Este dispositivo"
+        };
+    }
+
+    private void Show(string? error, string? success)
+    {
+        _kind = error is null ? "success" : "error";
+        _message = error ?? success;
+    }
+}

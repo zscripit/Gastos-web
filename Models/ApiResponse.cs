@@ -14,9 +14,12 @@ public sealed class ApiResponse<T>
 /// Resultado ya interpretado de una llamada: evita que las páginas tengan que
 /// tocar HttpResponseMessage o capturar excepciones de red.
 /// </summary>
-public sealed class ApiResult<T>
+public sealed record ApiResult<T>
 {
     public bool Success { get; init; }
+
+    /// <summary>Sin conexión: los datos son la última respuesta guardada en el dispositivo.</summary>
+    public bool FromCache { get; init; }
     public T? Data { get; init; }
     public string? Error { get; init; }
     public int StatusCode { get; init; }

@@ -4,7 +4,7 @@ using GastosApp.Web.Models;
 namespace GastosApp.Web.Services;
 
 /// <summary>
-/// Guarda la sesión (token JWT + expiración) en localStorage.
+/// Guarda la sesión (token JWT, refresh token y sus expiraciones) en localStorage.
 ///
 /// Lee siempre del almacenamiento, sin caché en memoria: IHttpClientFactory
 /// construye los message handlers en un ámbito de DI propio, así que el
@@ -25,7 +25,8 @@ public sealed class TokenStore(LocalStorageService storage)
 
         if (session is null) return null;
 
-        if (session.ExpiresAtUtc <= DateTimeOffset.UtcNow)
+        // Un token de acceso vencido no termina la sesión si todavía se puede renovar.
+        if (session.ExpiresAtUtc <= DateTimeOffset.UtcNow && !session.CanRefresh)
         {
             await ClearAsync();
             return null;

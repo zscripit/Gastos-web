@@ -20,6 +20,13 @@ progress { max-width: 100%; accent-color: var(--accent, #7c6cff); }
     .operation-row .operation-actions .btn { flex: 1; }
     .attachment-add .field, .attachment-picker { flex-basis: 100%; }
 }
+.offline-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem .75rem; margin: calc(env(safe-area-inset-top) + 12px) var(--gutter) 0; padding: .65rem .9rem; border-radius: var(--radius-sm); background: var(--warning-dim); color: var(--warning); font-size: .85rem; }
+.offline-banner.is-offline { background: var(--surface-strong); color: var(--text); border: var(--hairline) solid var(--border-strong); }
+.offline-banner > span { flex: 1 1 14rem; }
+.pending-row { border-style: dashed; }
+.settings-section { margin-top: 28px; }
+.settings-item { flex-wrap: wrap; gap: .75rem; }
+.settings-item > div:first-child { flex: 1 1 14rem; min-width: 0; }
 .attachments { margin-top: 1.25rem; padding-top: 1rem; border-top: var(--hairline) solid var(--border); }
 .attachments-title { font-size: .95rem; margin: 0 0 .65rem; }
 .attachment-list { list-style: none; margin: 0 0 .85rem; padding: 0; display: flex; flex-direction: column; gap: .5rem; }

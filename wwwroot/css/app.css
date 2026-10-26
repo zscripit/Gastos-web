@@ -730,6 +730,22 @@ select.input {
     margin: 7px 0 28px;
 }
 
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 8px;
+    color: var(--text-subtle);
+    font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1;
+    border-top: var(--hairline) solid var(--border);
+}
+
 .auth-footer {
     margin-top: 22px;
     text-align: center;

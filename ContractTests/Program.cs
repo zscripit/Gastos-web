@@ -32,8 +32,10 @@ await operations.SaveTransactionAsync(form, null);
 Check(Body().GetProperty("transactionType").GetInt32() == 3 && Body().GetProperty("sourceAccountId").GetGuid() == source, "Payment destination and source contract");
 Check(Body().GetProperty("categoryId").ValueKind == JsonValueKind.Null && Body().GetProperty("serviceId").ValueKind == JsonValueKind.Null, "Payment uses server category and no service");
 Check(DateTimeOffset.TryParse(Body().GetProperty("date").GetString(), out _), "Transaction sends timestamp with offset");
+var clientId = Guid.NewGuid();
 form.TransactionType = TransactionType.Income;
-await operations.SaveTransactionAsync(form, null);
+await operations.SaveTransactionAsync(form, null, clientId);
+Check(Body().GetProperty("clientId").GetGuid() == clientId, "New transaction carries its client id for idempotent retries");
 Check(Body().GetProperty("sourceAccountId").ValueKind == JsonValueKind.Null && Body().GetProperty("serviceId").ValueKind == JsonValueKind.Null, "Income strips payment and expense fields");
 form.TransactionType = TransactionType.Expense;
 await operations.SaveTransactionAsync(form, id);
@@ -128,7 +130,61 @@ recorder.ThrowNetwork = false;
 recorder.Reply(new { id, name = "Pago", attachmentCount = 1, attachments = new[] { new { id = attachmentId, type = 4, originalFileName = "voucher.jpg", contentType = "image/jpeg", sizeBytes = 1000, status = 1, createdAt = DateTimeOffset.UtcNow, uploadedAt = (DateTimeOffset?)null } } });
 var detail = await operations.TransactionAsync(id);
 Check(detail.Data?.Attachments.Single() is { Status: AttachmentStatus.Pending, UploadedAt: null, Type: AttachmentType.Voucher } && detail.Data.AttachmentCount == 1, "Detail exposes pending attachments");
+
+// --- Renovación de sesión ---
+var js = new FakeJsRuntime();
+var tokens = new TokenStore(new LocalStorageService(js));
+var authApi = new ScriptedHandler(); var refreshApi = new ScriptedHandler();
+var refresher = new SessionRefresher(new FakeHttpClientFactory(refreshApi), tokens);
+var authed = new ApiClient(new HttpClient(new AuthHeaderHandler(refresher) { InnerHandler = authApi }) { BaseAddress = new Uri("http://fixture.test") }, refresher);
+object Session(string access, int accessMinutes, string refresh) => new { data = new { userId = "u1", accessToken = access, expiresAtUtc = DateTimeOffset.UtcNow.AddMinutes(accessMinutes), refreshToken = refresh, refreshTokenExpiresAtUtc = DateTimeOffset.UtcNow.AddDays(30) } };
+async Task Store(string access, int accessMinutes, string refresh) => await tokens.SetSessionAsync(JsonSerializer.Deserialize<ApiResponse<AuthSession>>(JsonSerializer.Serialize(Session(access, accessMinutes, refresh)), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.Data!);
+await Store("old-access", 30, "r1");
+refreshApi.Respond = _ => (HttpStatusCode.OK, Session("new-access", 120, "r2"));
+authApi.Respond = r => r.Headers.Authorization?.Parameter == "new-access" ? (HttpStatusCode.OK, new { data = 1 }) : (HttpStatusCode.Unauthorized, new { });
+var retried = await authed.GetAsync<int>("/api/Anything");
+Check(retried.Success && authApi.Requests.Count == 2 && authApi.Requests[1].Authorization == "Bearer new-access", "401 renews the session and retries once");
+Check(JsonDocument.Parse(refreshApi.Bodies.Single()!).RootElement.GetProperty("refreshToken").GetString() == "r1" && (await tokens.GetSessionAsync())?.RefreshToken == "r2", "Rotated refresh token is stored");
+authApi.Clear(); refreshApi.Clear();
+await Store("expiring", 0, "r2");
+refreshApi.Respond = _ => (HttpStatusCode.OK, Session("fresh", 120, "r3"));
+authApi.Respond = _ => (HttpStatusCode.OK, new { data = 1 });
+await authed.GetAsync<int>("/api/Anything");
+Check(refreshApi.Requests.Count == 1 && authApi.Requests.Single().Authorization == "Bearer fresh", "Expiring token is renewed before the request");
+authApi.Clear(); refreshApi.Clear();
+await Store("revoked", 30, "r3");
+refreshApi.Respond = _ => (HttpStatusCode.Unauthorized, new { error = "InvalidRefreshToken" });
+authApi.Respond = _ => (HttpStatusCode.Unauthorized, new { });
+var signedOut = false; authed.Unauthorized += () => { signedOut = true; return Task.CompletedTask; };
+var rejected = await authed.GetAsync<int>("/api/Anything");
+Check(!rejected.Success && signedOut && await tokens.GetSessionAsync() is null && authApi.Requests.Count == 1, "Rejected refresh token ends the session");
+await Store("offline", 0, "r4");
+refreshApi.Status = null; refreshApi.Respond = _ => throw new HttpRequestException("offline");
+Check((await refresher.EnsureFreshAsync())?.AccessToken == "offline", "Offline keeps the stored session");
 Console.WriteLine($"{checks} contract checks passed.");
+
+sealed class FakeJsRuntime : Microsoft.JSInterop.IJSRuntime
+{
+    private readonly Dictionary<string, string> _storage = [];
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+    {
+        var key = (string)args![0]!;
+        object? result = identifier switch
+        {
+            "localStorage.getItem" => _storage.GetValueOrDefault(key),
+            "localStorage.setItem" => _storage[key] = (string)args[1]!,
+            "localStorage.removeItem" => _storage.Remove(key),
+            _ => throw new NotSupportedException(identifier)
+        };
+        return ValueTask.FromResult(result is TValue value ? value : default!);
+    }
+}
+
+sealed class FakeHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
+{
+    public HttpClient CreateClient(string name) => new(handler, disposeHandler: false) { BaseAddress = new Uri("http://fixture.test") };
+}
 
 sealed record StorageRequest(HttpMethod Method, string Uri, string? ContentType, string? Authorization);
 

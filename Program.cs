@@ -22,6 +22,8 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5123";
 builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddScoped<TokenStore>();
 builder.Services.AddScoped<AuthHeaderHandler>();
+builder.Services.AddScoped<SessionRefresher>();
+builder.Services.AddHttpClient(SessionRefresher.ClientName, client => client.BaseAddress = new Uri(apiBaseUrl));
 
 builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
     .AddHttpMessageHandler<AuthHeaderHandler>();
@@ -47,5 +49,9 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<OperationsService>();
 builder.Services.AddScoped<AttachmentService>();
+builder.Services.AddScoped<PushService>();
+builder.Services.AddScoped<PasskeyService>();
+builder.Services.AddScoped<OfflineStore>();
+builder.Services.AddScoped<OfflineSync>();
 
 await builder.Build().RunAsync();

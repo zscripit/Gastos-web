@@ -3,6 +3,7 @@
 @inject AuthService Auth
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthStateProvider
+@inject PasskeyService Passkeys
 
 <PageTitle>Iniciar sesión · Gastos</PageTitle>
 
@@ -34,6 +35,14 @@
     </button>
 </EditForm>
 
+@if (_passkeyAvailable)
+{
+    <p class="auth-divider"><span>o</span></p>
+    <button class="btn btn-secondary btn-block" type="button" disabled="@_busy" @onclick="PasskeyAsync">
+        <Icon Name="fingerprint" Size="18" /> Entrar con huella o rostro
+    </button>
+}
+
 <p class="auth-footer">
     ¿Todavía no tienes cuenta? <a href="registro">Crear una</a>
 </p>
@@ -43,14 +52,29 @@
 
     private readonly LoginRequest _model = new();
     private string? _error;
-    private bool _busy;
+    private bool _busy, _passkeyAvailable;
 
-    private async Task SubmitAsync()
+    protected override async Task OnInitializedAsync()
+    {
+        _passkeyAvailable = await Passkeys.IsAvailableAsync();
+        if (_passkeyAvailable) await Passkeys.PrepareLoginAsync();
+    }
+
+    private Task SubmitAsync() => SignInAsync(() => Auth.LoginAsync(_model));
+
+    private async Task PasskeyAsync()
+    {
+        await SignInAsync(Auth.LoginWithPasskeyAsync);
+        // Si falló o se canceló, se deja lista otra ceremonia para el siguiente intento.
+        if (_error is not null) await Passkeys.PrepareLoginAsync();
+    }
+
+    private async Task SignInAsync(Func<Task<ApiResult<AuthSession>>> signIn)
     {
         _busy = true;
         _error = null;
 
-        var result = await Auth.LoginAsync(_model);
+        var result = await signIn();
 
         _busy = false;
 

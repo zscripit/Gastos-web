@@ -21,17 +21,23 @@ public sealed class OperationsService(ApiClient api)
         return api.GetAsync<PagedTransactions>("/api/Transaction?" + string.Join("&", query));
     }
     public Task<ApiResult<TransactionDto>> TransactionAsync(Guid id) => api.GetAsync<TransactionDto>($"/api/Transaction/{id}");
-    public Task<ApiResult<TransactionDto>> SaveTransactionAsync(TransactionForm form, Guid? id)
+    public Task<ApiResult<TransactionDto>> SaveTransactionAsync(TransactionForm form, Guid? id, Guid? clientId = null)
     {
         var categoryId = form.TransactionType == TransactionType.Payment ? null : form.CategoryId;
         var serviceId = form.TransactionType == TransactionType.Expense ? form.ServiceId : null;
         return id is null
-            ? api.PostAsync<TransactionDto>("/api/Transaction", new { form.Name, form.Description, form.Amount,
-                date = Offset(form.Date), form.TransactionType, form.FinanceAccountId, categoryId, serviceId,
-                sourceAccountId = form.TransactionType == TransactionType.Payment ? form.SourceAccountId : null })
+            ? api.PostAsync<TransactionDto>("/api/Transaction", NewTransaction(form, clientId))
             : api.PutAsync<TransactionDto>($"/api/Transaction/{id}", new { form.Name, form.Description, form.Amount,
                 date = Offset(form.Date), categoryId, serviceId });
     }
+
+    /// <summary>Body del alta. Es el mismo que se guarda en la cola cuando no hay conexión.</summary>
+    public static NewTransactionBody NewTransaction(TransactionForm form, Guid? clientId) => new(
+        form.Name, form.Description, form.Amount, Offset(form.Date), form.TransactionType, form.FinanceAccountId,
+        form.TransactionType == TransactionType.Payment ? null : form.CategoryId,
+        form.TransactionType == TransactionType.Expense ? form.ServiceId : null,
+        form.TransactionType == TransactionType.Payment ? form.SourceAccountId : null,
+        clientId);
     public Task<ApiResult<List<Guid>>> DeleteTransactionAsync(Guid id) => api.DeleteAsync<List<Guid>>($"/api/Transaction/{id}");
     public Task<ApiResult<List<FinancePlanDto>>> PlansAsync(FinancePlanStatus status = FinancePlanStatus.All) =>
         api.GetAsync<List<FinancePlanDto>>($"/api/FinancePlan?status={(int)status}");
