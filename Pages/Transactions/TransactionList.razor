@@ -68,6 +68,9 @@ else
     }
 }
 @code {
+    // Atajo del ícono de la app ("Registrar gasto"): abre el formulario directo.
+    [SupplyParameterFromQuery(Name = "nuevo")] private bool Nuevo { get; set; }
+
     private List<ActiveAccountDto> _accounts = [];
     private List<FinanceAccountListItem> _allAccounts = [];
     private List<CategoryDto> _categories = [], _allCategories = [];
@@ -106,6 +109,7 @@ else
         if (!_plansKnown) _error ??= "No se pudo verificar qué movimientos pertenecen a compras a meses. Recarga para editarlos.";
         _error ??= accounts.Error ?? allAccounts.Error ?? categories.Error ?? allCategories.Error ?? services.Error ?? allServices.Error;
         _loading = false;
+        if (Nuevo) New();
     }
     private void New() { _id = null; _linked = false; _form = new(); _attachments = []; _error = null; _delete = null; }
     private void Cancel() { _form = null; _id = null; _attachments = []; }
