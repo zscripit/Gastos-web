@@ -19,21 +19,13 @@ La URL de la API se configura con `ApiBaseUrl`:
 ### Requisito en el backend: CORS
 
 La API debe permitir el origen de la app web, o el navegador bloquea toda
-petición en el preflight. En `Program.cs` de `gastos-api`:
+petición en el preflight. Los orígenes se configuran en `gastos-api` con
+`Cors:AllowedOrigins` (en producción, `Cors__AllowedOrigins__0` con
+`https://gastosapp-web.scrip-dev.workers.dev`, sin `/` final).
 
-```csharp
-builder.Services.AddCors(o => o.AddPolicy("web", p => p
-    .WithOrigins(
-        "http://localhost:5025", "https://localhost:7244",   // desarrollo
-        "https://gastosapp-web.<subdominio>.workers.dev")    // producción (Cloudflare)
-    .AllowAnyHeader()
-    .AllowAnyMethod()));
-
-app.UseCors("web");   // antes de UseAuthentication/UseAuthorization
-```
-
-Si el Worker se sirve desde un dominio propio, ese es el origen que hay que
-permitir.
+Ese mismo origen define el dominio de las passkeys: si el Worker pasa a un
+dominio propio, hay que cambiarlo en la API y las passkeys ya registradas
+dejan de servir (cada usuario las vuelve a activar).
 
 ### Requisito en el storage: CORS del bucket de R2
 
@@ -54,7 +46,7 @@ regla, toda subida falla con "No se pudo subir el archivo".
 | Sin conexión | `Services/OfflineStore.cs`, `OfflineSync.cs`, `wwwroot/js/offline-db.js`, `Shared/OfflineBanner.razor` | IndexedDB: últimas consultas para verlas sin red y cola de movimientos que se envía al volver la conexión |
 | Features | `Services/AccountService.cs`, `CategoryService.cs`, `CatalogService.cs` | Un servicio por entidad de la API |
 | Operación | `Services/OperationsService.cs` | Servicios, movimientos, pagos de tarjeta, compras a meses y saldos |
-| Comprobantes | `Services/AttachmentService.cs`, `StorageClient.cs`, `Shared/AttachmentManager.razor`, `AttachmentViewer.razor` | Subida directa a R2 con URLs prefirmadas (sin JWT), reducción de fotos y visor en la app (pdf.js en `wwwroot/lib/pdfjs`) |
+| Comprobantes | `Services/AttachmentService.cs`, `StorageClient.cs`, `Shared/AttachmentManager.razor`, `AttachmentViewer.razor` | Subida directa a R2 con URLs prefirmadas (sin JWT), reducción de fotos, visor en la app (pdf.js en `wwwroot/lib/pdfjs`) con descarga; `AttachmentManager` tiene modo `ReadOnly` para el detalle |
 | UI | `Pages/`, `Layout/`, `Shared/` | Pantallas y componentes reutilizables |
 
 ## Rutas
@@ -111,7 +103,7 @@ Implementado: landing pública en `/` (quien ya tiene sesión salta a `/inicio`)
 próximos pagos de tarjeta, alta/edición de cuentas de débito-ahorro-efectivo,
 alta/edición de tarjetas de crédito, categorías (alta y archivar/reactivar).
 
-También implementado según OpenAPI: servicios (alta, edición y archivo), movimientos (alta, edición, eliminación, filtros y paginación), pagos de tarjeta vinculados a una cuenta de origen, compras a meses (alta, calendario, liquidación anticipada y eliminación) y saldos por cuenta con periodo de tarjeta.
+También implementado según OpenAPI: servicios (alta, edición y archivo), movimientos (alta, edición, eliminación, filtros, paginación y vista de detalle de solo lectura al tocar la tarjeta), comprobantes por movimiento (tocar el comprobante lo abre en el visor, que permite descargarlo), pagos de tarjeta vinculados a una cuenta de origen, compras a meses (alta, calendario, liquidación anticipada y eliminación) y saldos por cuenta con periodo de tarjeta.
 
 Funciones móviles (etapa 2 de la materia):
 
