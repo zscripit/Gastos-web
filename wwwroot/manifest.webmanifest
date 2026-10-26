@@ -12,6 +12,15 @@
   "background_color": "#0f1115",
   "theme_color": "#0f1115",
   "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Registrar gasto",
+      "short_name": "Nuevo gasto",
+      "description": "Abre el formulario para registrar un movimiento.",
+      "url": "./movimientos?nuevo=1",
+      "icons": [ { "src": "icon-192.png", "type": "image/png", "sizes": "192x192" } ]
+    }
+  ],
   "icons": [
     {
       "src": "icon-512.png",

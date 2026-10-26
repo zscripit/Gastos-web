@@ -36,10 +36,16 @@ public sealed class RegisterRequest
     public string Password { get; set; } = string.Empty;
 }
 
-/// <summary>Payload devuelto por /Auth/Login y /Auth/Register (misma forma).</summary>
+/// <summary>Payload devuelto por /Auth/Login, /Auth/Register y /Auth/Refresh (misma forma).</summary>
 public sealed class AuthSession
 {
     public string UserId { get; set; } = string.Empty;
     public string AccessToken { get; set; } = string.Empty;
     public DateTimeOffset ExpiresAtUtc { get; set; }
+
+    // Renueva el token de acceso sin pedir la contraseña. Puede faltar en sesiones guardadas antes de existir.
+    public string? RefreshToken { get; set; }
+    public DateTimeOffset? RefreshTokenExpiresAtUtc { get; set; }
+
+    public bool CanRefresh => !string.IsNullOrEmpty(RefreshToken) && RefreshTokenExpiresAtUtc > DateTimeOffset.UtcNow;
 }

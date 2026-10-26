@@ -3,6 +3,7 @@
 @inject ApiClient Api
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject OfflineSync Sync
 
 @* La navegación es un único bloque de marcado: en teléfono el CSS la pinta
    como barra inferior y en escritorio como barra lateral. Así no hay dos
@@ -82,6 +83,9 @@
     </AuthorizeView>
 
     <main class="app-main">
+        <AuthorizeView Policy="@Policies.Operational">
+            <OfflineBanner />
+        </AuthorizeView>
         @* La clave se lee de la URL en el mismo render en que el router cambia
            de página, así que cada navegación monta la pantalla una sola vez (y
            dispara su animación de entrada). Actualizarla desde LocationChanged
@@ -95,6 +99,12 @@
 
 @code {
     protected override void OnInitialized() => Api.Unauthorized += HandleUnauthorizedAsync;
+
+    // La cola sin conexión se envía al abrir la app y cada vez que vuelve la red.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Sync.StartAsync();
+    }
 
     // Si la API rechaza el token (expirado o revocado) se limpia la sesión y
     // se manda al login, en vez de dejar la app mostrando pantallas vacías.

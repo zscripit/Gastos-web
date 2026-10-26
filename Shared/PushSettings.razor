@@ -1,0 +1,70 @@
+@* Recordatorios de corte y pago en este dispositivo. *@
+@inject PushService Push
+
+<section class="section settings-section">
+    <h2 class="section-title">Recordatorios de pago</h2>
+    <div class="list-item settings-item">
+        <div>
+            <p class="list-title">Avisos de corte y fecha de pago</p>
+            <p class="list-subtitle">@Description</p>
+        </div>
+        @if (_state == PushState.On)
+        {
+            <div class="operation-actions">
+                <button class="btn btn-secondary btn-sm" type="button" disabled="@_busy" @onclick="TestAsync">Probar</button>
+                <button class="btn btn-secondary btn-sm" type="button" disabled="@_busy" @onclick="DisableAsync">Desactivar</button>
+            </div>
+        }
+        else if (_state == PushState.Off)
+        {
+            <button class="btn btn-primary btn-sm" type="button" disabled="@_busy" @onclick="EnableAsync">Activar</button>
+        }
+    </div>
+    <Alert Message="@_message" Kind="@_kind" />
+</section>
+
+@code {
+    private PushState? _state;
+    private bool _busy;
+    private string? _message;
+    private string _kind = "error";
+
+    private string Description => _state switch
+    {
+        null => "Revisando…",
+        PushState.On => "Activados en este dispositivo: un día antes del corte, tres días antes del pago y el día del pago.",
+        PushState.Off => "Te avisamos un día antes del corte, tres días antes del pago y el día del pago.",
+        PushState.Denied => "Las notificaciones están bloqueadas para esta app. Permítelas en la configuración del navegador.",
+        PushState.NeedsInstall => "En iPhone, agrega la app a la pantalla de inicio (Compartir → Agregar a inicio) y actívalos desde ahí.",
+        _ => "Este navegador no admite notificaciones push."
+    };
+
+    protected override async Task OnInitializedAsync() => _state = await Push.GetStateAsync();
+
+    private Task EnableAsync() => RunAsync(async () =>
+    {
+        var error = await Push.EnableAsync();
+        Show(error, "Listo: te avisaremos en este dispositivo.");
+    });
+
+    private Task DisableAsync() => RunAsync(async () => Show(await Push.DisableAsync(), "Recordatorios desactivados en este dispositivo."));
+
+    private Task TestAsync() => RunAsync(async () =>
+    {
+        var result = await Push.SendTestAsync();
+        Show(result.Success ? null : result.Error, "Enviamos una notificación de prueba.");
+    });
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        _busy = true; _message = null;
+        try { await action(); }
+        finally { _state = await Push.GetStateAsync(); _busy = false; }
+    }
+
+    private void Show(string? error, string success)
+    {
+        _kind = error is null ? "success" : "error";
+        _message = error ?? success;
+    }
+}

@@ -5,7 +5,7 @@
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./out/wwwroot",
-    // Rutas como /transacciones/5 regresan index.html al recargar y Blazor resuelve la ruta.
+    // Rutas como /cuentas/{id}/saldo regresan index.html al recargar y Blazor resuelve la ruta.
     "not_found_handling": "single-page-application"
   }
 }

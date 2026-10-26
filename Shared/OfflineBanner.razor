@@ -1,0 +1,46 @@
+@* Aviso de conexión y movimientos pendientes de sincronizar, arriba de cada pantalla. *@
+@implements IDisposable
+@inject OfflineSync Sync
+
+@if (!Sync.IsOnline || Sync.Pending.Count > 0)
+{
+    <div class="offline-banner @(Sync.IsOnline ? "" : "is-offline")" role="status">
+        <span>
+            @if (!Sync.IsOnline)
+            {
+                <strong>Sin conexión.</strong> <text>Puedes registrar gastos e ingresos; se enviarán al volver la conexión.</text>
+            }
+            @if (Sync.Pending.Count > 0)
+            {
+                @(Sync.IsOnline ? PendingText : " " + PendingText)
+            }
+        </span>
+        @if (Sync.IsOnline && Sync.Pending.Count > 0)
+        {
+            <button class="btn btn-secondary btn-sm" type="button" disabled="@Sync.IsSyncing" @onclick="Sync.RetryAsync">
+                @(Sync.IsSyncing ? "Sincronizando…" : "Sincronizar")
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private string PendingText
+    {
+        get
+        {
+            var failed = Sync.Pending.Count(p => p.Error is not null);
+            var waiting = Sync.Pending.Count - failed;
+            var parts = new List<string>();
+            if (waiting > 0) parts.Add(waiting == 1 ? "1 movimiento pendiente de sincronizar." : $"{waiting} movimientos pendientes de sincronizar.");
+            if (failed > 0) parts.Add(failed == 1 ? "1 no se pudo sincronizar; revísalo en Movimientos." : $"{failed} no se pudieron sincronizar; revísalos en Movimientos.");
+            return string.Join(" ", parts);
+        }
+    }
+
+    protected override void OnInitialized() => Sync.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Sync.Changed -= OnChanged;
+}

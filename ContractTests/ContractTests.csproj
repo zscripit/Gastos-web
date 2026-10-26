@@ -5,6 +5,16 @@
     <Compile Include="../Models/Enums.cs" Link="Models/Enums.cs" />
     <Compile Include="../Models/ApiResponse.cs" Link="Models/ApiResponse.cs" />
     <Compile Include="../Models/OperationsModels.cs" Link="Models/OperationsModels.cs" />
+    <Compile Include="../Models/AttachmentModels.cs" Link="Models/AttachmentModels.cs" />
+    <Compile Include="../Services/AttachmentService.cs" Link="Services/AttachmentService.cs" />
+    <Compile Include="../Services/StorageClient.cs" Link="Services/StorageClient.cs" />
+    <Compile Include="../Services/SessionRefresher.cs" Link="Services/SessionRefresher.cs" />
+    <Compile Include="../Services/AuthHeaderHandler.cs" Link="Services/AuthHeaderHandler.cs" />
+    <Compile Include="../Services/TokenStore.cs" Link="Services/TokenStore.cs" />
+    <Compile Include="../Services/LocalStorageService.cs" Link="Services/LocalStorageService.cs" />
+    <Compile Include="../Models/AuthModels.cs" Link="Models/AuthModels.cs" />
+    <Compile Include="../Models/OfflineModels.cs" Link="Models/OfflineModels.cs" />
+    <Compile Include="../Services/OfflineStore.cs" Link="Services/OfflineStore.cs" />
     <Compile Include="../Services/AccountService.cs" Link="Services/AccountService.cs" />
     <Compile Include="../Services/ApiClient.cs" Link="Services/ApiClient.cs" />
     <Compile Include="../Services/OperationsService.cs" Link="Services/OperationsService.cs" />

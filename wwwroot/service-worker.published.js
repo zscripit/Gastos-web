@@ -2,6 +2,7 @@
 // offline support. See https://aka.ms/blazor-offline-considerations
 
 self.importScripts('./service-worker-assets.js');
+self.importScripts('./js/push-sw.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
@@ -49,6 +50,16 @@ async function onFetch(event) {
         const request = shouldServeIndexHtml ? 'index.html' : event.request;
         const cache = await caches.open(cacheName);
         cachedResponse = await cache.match(request);
+
+        // Cloudflare redirige /index.html -> / (307), así que la copia en caché queda marcada
+        // como redirigida y el navegador la rechaza en navegaciones (ERR_FAILED). Se reconstruye limpia.
+        if (cachedResponse && cachedResponse.redirected) {
+            cachedResponse = new Response(await cachedResponse.blob(), {
+                status: cachedResponse.status,
+                statusText: cachedResponse.statusText,
+                headers: cachedResponse.headers
+            });
+        }
     }
 
     return cachedResponse || fetch(event.request);

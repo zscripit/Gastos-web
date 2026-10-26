@@ -3,10 +3,13 @@
 @inject OperationsService Operations
 @inject AccountService Accounts
 @inject CategoryService Categories
+@inject OfflineSync Sync
+@implements IDisposable
 
 <PageTitle>Movimientos · Gastos</PageTitle>
 <header class="page-header"><h1>Movimientos</h1><p class="page-subtitle">Ingresos, gastos y pagos de tarjeta.</p></header>
 <Alert Message="@_error" />
+<Alert Message="@_info" Kind="info" />
 @if (_loading) { <LoadingBlock /> }
 else
 {
@@ -44,6 +47,7 @@ else
                     <div class="operation-actions"><button class="btn btn-primary" type="submit">@(_busy ? "Guardando…" : "Guardar")</button><button class="btn btn-secondary" type="button" @onclick="Cancel">Cancelar</button></div>
                 </fieldset>
             </EditForm>
+            <AttachmentManager @ref="_attachmentManager" TransactionId="_id" Attachments="_attachments" Disabled="_busy" OnChanged="FetchAsync" />
         </section>
     }
     <details class="section operation-filters"><summary>Filtrar movimientos</summary>
@@ -54,19 +58,32 @@ else
     </details>
     @if (_delete is not null)
     {
-        <section class="card operation-form" role="alert"><p>¿Eliminar «@_delete.Name»? Esta acción es definitiva.@(_delete.TransferId is null ? "" : " También se elimina el movimiento vinculado del pago.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="DeleteAsync">Confirmar eliminación</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _delete = null">Cancelar</button></div></section>
+        <section class="card operation-form" role="alert"><p>¿Eliminar «@_delete.Name»? Esta acción es definitiva.@(_delete.TransferId is null ? "" : " También se elimina el movimiento vinculado del pago.")@(_delete.AttachmentCount == 0 ? "" : " También se eliminan sus comprobantes.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="DeleteAsync">Confirmar eliminación</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _delete = null">Cancelar</button></div></section>
     }
-    @if (_page.Items.Count == 0) { <EmptyState Title="Sin movimientos" Description="Registra un movimiento o ajusta los filtros." /> }
+    @if (Sync.Pending.Count > 0)
+    {
+        <ul class="list">@foreach (var pending in Sync.Pending)
+        {
+            <li class="list-item operation-row pending-row" @key="pending.ClientId"><div><p class="list-title">@pending.Body.Name · @pending.Body.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(pending.Body.TransactionType) · @pending.AccountName</p><p class="list-subtitle">@pending.Body.Date.ToLocalTime().ToString("dd MMM yyyy") · @pending.CategoryName @pending.ServiceName</p>@if (pending.Error is null) { <span class="badge badge-warning">Pendiente de sincronizar</span> } else { <span class="badge badge-danger">No se pudo sincronizar</span><p class="list-note">@pending.Error</p> }</div><div class="operation-actions">@if (_discard == pending.ClientId) { <button class="btn btn-danger" type="button" @onclick="() => DiscardAsync(pending.ClientId)">Confirmar</button><button class="btn btn-secondary" type="button" @onclick="() => _discard = null">Cancelar</button> } else { <button class="btn btn-secondary" type="button" @onclick="() => _discard = pending.ClientId">Descartar</button> }</div></li>
+        }</ul>
+    }
+    @if (_page.Items.Count == 0)
+    {
+        @if (Sync.Pending.Count == 0) { <EmptyState Title="Sin movimientos" Description="Registra un movimiento o ajusta los filtros." /> }
+    }
     else
     {
         <ul class="list">@foreach (var item in _page.Items)
         {
-            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
+            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</div><div class="operation-actions">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
         }</ul>
         <div class="operation-actions"><button class="btn btn-secondary" disabled="@(_busy || _pageNumber <= 1)" @onclick="() => LoadPageAsync(_pageNumber - 1)">Anterior</button><span>Página @_pageNumber de @_page.TotalPages · @_page.TotalCount movimientos</span><button class="btn btn-secondary" disabled="@(_busy || _pageNumber >= _page.TotalPages)" @onclick="() => LoadPageAsync(_pageNumber + 1)">Siguiente</button></div>
     }
 }
 @code {
+    // Atajo del ícono de la app ("Registrar gasto"): abre el formulario directo.
+    [SupplyParameterFromQuery(Name = "nuevo")] private bool Nuevo { get; set; }
+
     private List<ActiveAccountDto> _accounts = [];
     private List<FinanceAccountListItem> _allAccounts = [];
     private List<CategoryDto> _categories = [], _allCategories = [];
@@ -74,6 +91,10 @@ else
     private PagedTransactions _page = new();
     private TransactionForm? _form;
     private TransactionDto? _delete;
+    private Guid? _discard;
+    private string? _info;
+    private List<AttachmentDto> _attachments = [];
+    private AttachmentManager? _attachmentManager;
     private readonly HashSet<Guid> _planTransactions = [];
     private bool _plansKnown;
     private Guid? _id, _accountFilter, _categoryFilter, _serviceFilter;
@@ -85,6 +106,8 @@ else
     private IEnumerable<ActiveAccountDto> SelectableAccounts => _accounts.Where(x => _form?.TransactionType != TransactionType.Payment || x.IsCredit);
     protected override async Task OnInitializedAsync()
     {
+        Sync.Changed += OnSyncChanged;
+        Sync.Synced += OnSynced;
         var accounts = await Accounts.GetActiveAsync(); var allAccounts = await Accounts.GetAllAsync();
         var categories = await Categories.GetActiveAsync(); var allCategories = await Categories.GetAllAsync();
         var services = await Operations.ServicesAsync(true); var allServices = await Operations.ServicesAsync();
@@ -102,10 +125,17 @@ else
         await LoadPageAsync(1);
         if (!_plansKnown) _error ??= "No se pudo verificar qué movimientos pertenecen a compras a meses. Recarga para editarlos.";
         _error ??= accounts.Error ?? allAccounts.Error ?? categories.Error ?? allCategories.Error ?? services.Error ?? allServices.Error;
+        if (new[] { accounts.FromCache, categories.FromCache, services.FromCache }.Any(x => x))
+        {
+            // Sin conexión pero con datos guardados: se puede registrar; no es un error de compras a meses.
+            _info = "Sin conexión: se muestran los últimos datos guardados en este dispositivo.";
+            if (!_plansKnown && _error?.StartsWith("No se pudo verificar") == true) _error = null;
+        }
         _loading = false;
+        if (Nuevo) New();
     }
-    private void New() { _id = null; _linked = false; _form = new(); _error = null; _delete = null; }
-    private void Cancel() { _form = null; _id = null; }
+    private void New() { _id = null; _linked = false; _form = new(); _attachments = []; _error = null; _delete = null; }
+    private void Cancel() { _form = null; _id = null; _attachments = []; }
     private void TypeChanged() { if (_form is null) return; _form.FinanceAccountId = null; _form.CategoryId = null; _form.ServiceId = null; _form.SourceAccountId = null; }
     private async Task EditAsync(Guid id)
     {
@@ -115,7 +145,7 @@ else
         {
             var result = await Operations.TransactionAsync(id);
             if (!result.Success || result.Data is null) { _error = result.Error; return; }
-            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName;
+            var item = result.Data; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName; _attachments = item.Attachments;
             _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
             if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
             if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
@@ -129,13 +159,32 @@ else
         if (_form.FinanceAccountId is null || _form.FinanceAccountId == Guid.Empty) { _error = "Selecciona una cuenta."; return; }
         if (_form.TransactionType != TransactionType.Payment && !_linked && (_form.CategoryId is null || _form.CategoryId == Guid.Empty)) { _error = "Selecciona una categoría."; return; }
         _busy = true; _error = null;
+        Guid? created = null; string? attachmentError = null;
+        // El id del cliente hace que reenviar el alta (p. ej. desde la cola sin conexión) no la duplique.
+        var clientId = _id is null ? Guid.NewGuid() : (Guid?)null;
         try
         {
-            var result = await Operations.SaveTransactionAsync(_form, _id);
-            if (result.Success) { Cancel(); await FetchAsync(); }
+            var result = await Operations.SaveTransactionAsync(_form, _id, clientId);
+            if (result.Success)
+            {
+                // Los comprobantes de un movimiento nuevo se suben ya que existe en el servidor.
+                if (_id is null && result.Data is not null && _attachmentManager?.HasStaged == true)
+                {
+                    created = result.Data.Id;
+                    attachmentError = await _attachmentManager.UploadStagedAsync(created.Value);
+                }
+                Cancel(); await FetchAsync();
+            }
+            else if (result.StatusCode == 0 && clientId is Guid offlineId) await QueueOfflineAsync(offlineId);
             else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)) + (result.StatusCode == 409 ? " Si pertenece a una compra a meses, adminístrala desde Compras a meses." : "");
         }
         finally { _busy = false; }
+        // Si algún comprobante falló, se abre el movimiento ya guardado para reintentar desde ahí.
+        if (attachmentError is not null && created is Guid id)
+        {
+            await EditAsync(id);
+            _error = "El movimiento se guardó, pero " + char.ToLower(attachmentError[0]) + attachmentError[1..];
+        }
     }
     private async Task DeleteAsync()
     {
@@ -149,6 +198,54 @@ else
         }
         finally { _busy = false; }
     }
+    // Sin conexión el movimiento se guarda en el dispositivo y OfflineSync lo envía después.
+    private async Task QueueOfflineAsync(Guid clientId)
+    {
+        if (_form is null) return;
+        if (_form.TransactionType == TransactionType.Payment)
+        {
+            _error = "Los pagos de tarjeta necesitan conexión. Regístralo cuando vuelva la red.";
+            return;
+        }
+
+        await Sync.EnqueueAsync(new PendingTransaction
+        {
+            ClientId = clientId,
+            Body = OperationsService.NewTransaction(_form, clientId),
+            AccountName = _accounts.FirstOrDefault(x => x.Id == _form.FinanceAccountId)?.Name ?? "",
+            CategoryName = _categories.FirstOrDefault(x => x.Id == _form.CategoryId)?.Name,
+            ServiceName = _services.FirstOrDefault(x => x.Id == _form.ServiceId)?.Name,
+            QueuedAt = DateTimeOffset.UtcNow
+        });
+
+        var hadAttachments = _attachmentManager?.HasStaged == true;
+        Cancel();
+        _info = "Sin conexión: el movimiento se guardó en este dispositivo y se enviará al volver la conexión."
+                + (hadAttachments ? " Los comprobantes no se guardan sin conexión; adjúntalos cuando se sincronice." : "");
+    }
+
+    private async Task DiscardAsync(Guid clientId)
+    {
+        _discard = null;
+        await Sync.DiscardAsync(clientId);
+    }
+
+    private void OnSyncChanged() => InvokeAsync(StateHasChanged);
+
+    // Lo que estaba en la cola ya es un movimiento real: se recarga la lista para mostrarlo.
+    private void OnSynced() => InvokeAsync(async () =>
+    {
+        _info = null;
+        await FetchAsync();
+        StateHasChanged();
+    });
+
+    public void Dispose()
+    {
+        Sync.Changed -= OnSyncChanged;
+        Sync.Synced -= OnSynced;
+    }
+
     private async Task ApplyFiltersAsync() => await LoadPageAsync(1);
     private async Task LoadPageAsync(int page)
     {
@@ -161,6 +258,7 @@ else
     {
         var result = await Operations.TransactionsAsync(_pageNumber, _accountFilter, _categoryFilter, _serviceFilter, _typeFilter, _from, _to);
         if (!result.Success) { _error = result.Error; return; }
+        if (result.FromCache) _info ??= "Sin conexión: se muestran los últimos datos guardados en este dispositivo.";
         _page = result.Data ?? new();
         if (_pageNumber > 1 && _page.Items.Count == 0) { _pageNumber--; await FetchAsync(); }
     }
