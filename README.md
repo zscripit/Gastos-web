@@ -45,6 +45,7 @@ regla, toda subida falla con "No se pudo subir el archivo".
 | Recordatorios | `Services/PushService.cs`, `wwwroot/js/push.js`, `wwwroot/js/push-sw.js`, `Shared/PushSettings.razor` | Suscripción Web Push del dispositivo; el service worker muestra el aviso y abre el saldo de la tarjeta |
 | Sin conexión | `Services/OfflineStore.cs`, `OfflineSync.cs`, `wwwroot/js/offline-db.js`, `Shared/OfflineBanner.razor` | IndexedDB: últimas consultas para verlas sin red y cola de movimientos que se envía al volver la conexión |
 | Features | `Services/AccountService.cs`, `CategoryService.cs`, `CatalogService.cs` | Un servicio por entidad de la API |
+| Análisis | `Services/AnalyticsService.cs`, `Shared/BarChart.razor`, `Pages/Analytics/AnalyticsPage.razor` | Indicadores; las gráficas son barras en HTML/CSS, sin librería |
 | Operación | `Services/OperationsService.cs` | Servicios, movimientos, pagos de tarjeta, compras a meses y saldos |
 | Comprobantes | `Services/AttachmentService.cs`, `StorageClient.cs`, `Shared/AttachmentManager.razor`, `AttachmentViewer.razor` | Subida directa a R2 con URLs prefirmadas (sin JWT), reducción de fotos, visor en la app (pdf.js en `wwwroot/lib/pdfjs`) con descarga; `AttachmentManager` tiene modo `ReadOnly` para el detalle |
 | UI | `Pages/`, `Layout/`, `Shared/` | Pantallas y componentes reutilizables |
@@ -60,6 +61,7 @@ regla, toda subida falla con "No se pudo subir el archivo".
 | `/cuentas/{id}/saldo` | Usuario | Saldo de la cuenta (con periodo si es tarjeta) |
 | `/categorias` | Usuario | Categorías |
 | `/servicios`, `/movimientos`, `/planes` | Usuario | Servicios, movimientos y compras a meses |
+| `/analisis` | Usuario | Gasto por mes con proyección, por categoría contra el promedio, compras a meses por cobrar, uso y pagos por corte de cada tarjeta, ingresos y ahorro, y servicios |
 | `/admin/bancos`, `/admin/proveedores` | SuperAdmin | Catálogos globales |
 | `/perfil` | Cualquiera con sesión | Datos de la cuenta; para usuarios, acceso con huella o rostro y recordatorios de pago |
 

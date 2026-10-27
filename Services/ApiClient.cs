@@ -16,7 +16,7 @@ public sealed class ApiClient(HttpClient http, SessionRefresher? refresher = nul
 
     // Consultas que se guardan para mostrarlas sin conexión (no las URLs temporales de comprobantes).
     private static readonly string[] CacheablePrefixes =
-        ["/api/FinanceAccount", "/api/CreditAccount", "/api/Category", "/api/Service", "/api/Transaction", "/api/FinancePlan", "/api/Bank", "/api/Provider"];
+        ["/api/FinanceAccount", "/api/CreditAccount", "/api/Category", "/api/Service", "/api/Transaction", "/api/FinancePlan", "/api/Bank", "/api/Provider", "/api/Analytics"];
 
     // Estático: ApiClient es transitorio (cliente tipado) y cada servicio recibe su propia instancia;
     // el layout debe enterarse del 401 venga de la instancia que venga.

@@ -1,0 +1,432 @@
+@page "/analisis"
+@attribute [Authorize(Policy = Policies.Operational)]
+@inject AnalyticsService Analytics
+
+<PageTitle>Análisis · Gastos</PageTitle>
+
+<header class="page-header">
+    <h1>Análisis</h1>
+    <p class="page-subtitle">Cuánto gastas, en qué y qué ya tienes comprometido.</p>
+</header>
+
+@if (_fromCache)
+{
+    <Alert Message="Sin conexión: se muestran los últimos datos guardados en este dispositivo." Kind="info" />
+}
+
+@* --- 1. Gasto por mes --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head">
+        <h2 class="section-title">Gasto por mes</h2>
+        <select class="input input-compact" aria-label="Periodo" value="@_months" @onchange="MonthsChangedAsync">
+            <option value="6">6 meses</option>
+            <option value="12">12 meses</option>
+        </select>
+    </div>
+    <Alert Message="@_monthlyError" />
+    @if (_monthly is null && _monthlyError is null) { <LoadingBlock /> }
+    else if (_monthly is { } monthly)
+    {
+        var current = monthly.CurrentMonth;
+        <div class="stat-row">
+            <div><p class="account-figure-label">Este mes</p><p class="stat-figure">@current.SpentToDate.ToString("C0")</p></div>
+            <div><p class="account-figure-label">Proyección</p><p class="stat-figure is-muted">@current.Projected.ToString("C0")</p></div>
+            <div>
+                <p class="account-figure-label">Vs. mes anterior</p>
+                <p class="stat-figure @ChangeClass(current.ChangeVsPrevious)">@ChangeText(current.ChangeVsPrevious)</p>
+            </div>
+        </div>
+        <p class="field-hint">Al día @current.DaysElapsed de @current.DaysInMonth. El mes anterior llevaba @current.PreviousMonthToDate.ToString("C0") a esta fecha y cerró en @current.PreviousMonthTotal.ToString("C0").</p>
+
+        <BarChart Label="Gasto por mes" Columns="MonthlyColumns" Selected="_selectedMonth" SelectedChanged="i => _selectedMonth = i" />
+        @if (_selectedMonth >= 0 && _selectedMonth < monthly.Months.Count)
+        {
+            var item = monthly.Months[_selectedMonth];
+            <p class="chart-detail">
+                <strong>@MonthName(item.Month, true)</strong> · @item.Total.ToString("C2")
+                <span class="legend-dot series-0"></span>gastos @item.Expenses.ToString("C2")
+                @if (item.PlanPurchases > 0) { <span class="legend-dot series-1"></span><text>compras a meses @item.PlanPurchases.ToString("C2")</text> }
+                @if (item == monthly.Months[^1]) { <text> · proyección @current.Projected.ToString("C2")</text> }
+            </p>
+        }
+        <p class="field-hint">Las compras a meses cuentan por su total en el mes en que se hicieron. Los pagos de tarjeta no son gasto.</p>
+    }
+</section>
+
+@* --- 2. Por categoría --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head">
+        <h2 class="section-title">Por categoría</h2>
+        <div class="month-stepper">
+            <button class="btn btn-ghost btn-sm" type="button" aria-label="Mes anterior" disabled="@_categoriesLoading" @onclick="() => MoveCategoryMonthAsync(-1)">‹</button>
+            <span>@MonthName(_categoryMonth, true)</span>
+            <button class="btn btn-ghost btn-sm" type="button" aria-label="Mes siguiente" disabled="@(_categoriesLoading || _categoryMonth >= ThisMonth)" @onclick="() => MoveCategoryMonthAsync(1)">›</button>
+        </div>
+    </div>
+    <Alert Message="@_categoriesError" />
+    @if (_categoriesLoading) { <LoadingBlock /> }
+    else if (_categories is { } categories)
+    {
+        var spent = categories.Categories.Where(c => c.Amount > 0).ToList();
+        var max = spent.Select(c => Math.Max(c.Amount, c.Average ?? 0)).DefaultIfEmpty(1).Max();
+        @if (spent.Count == 0)
+        {
+            <p class="field-hint">Sin gastos en este mes.</p>
+        }
+        else
+        {
+            <ul class="category-bars">
+                @foreach (var category in spent)
+                {
+                    <li>
+                        <div class="category-bar-head">
+                            <span class="list-title">@category.Name</span>
+                            <span>
+                                <strong>@category.Amount.ToString("C0")</strong>
+                                @if (category.ChangeVsAverage is decimal change)
+                                {
+                                    <span class="badge @(change > 0.1m ? "badge-warning" : change < -0.1m ? "badge-success" : "badge-neutral")">@ChangeText(change)</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="category-bar">
+                            <span class="category-bar-fill" style="width: @Pct(category.Amount, max)"></span>
+                            @if (category.Average is decimal average && average > 0)
+                            {
+                                <span class="category-bar-average" style="left: @Pct(average, max)" title="@($"Promedio {average:C0}")"></span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+            <p class="field-hint">
+                @(categories.AverageMonths == 0
+                    ? "Aún no hay meses anteriores para comparar."
+                    : $"La marca vertical es el promedio mensual de los {categories.AverageMonths} meses anteriores con gastos; el porcentaje compara contra él.")
+            </p>
+        }
+    }
+</section>
+
+@* --- 3. Compromiso de compras a meses --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head">
+        <h2 class="section-title">Compras a meses por cobrar</h2>
+    </div>
+    <Alert Message="@_commitmentsError" />
+    @if (_commitments is null && _commitmentsError is null) { <LoadingBlock /> }
+    else if (_commitments is { } commitments)
+    {
+        @if (commitments.Months.All(m => m.Total == 0))
+        {
+            <p class="field-hint">No tienes cuotas pendientes.</p>
+        }
+        else
+        {
+            var next = commitments.Months.Skip(1).FirstOrDefault();
+            <div class="stat-row">
+                <div><p class="account-figure-label">Resto de @MonthName(commitments.Months[0].Month, false)</p><p class="stat-figure">@commitments.Months[0].Total.ToString("C0")</p></div>
+                @if (next is not null) { <div><p class="account-figure-label">@MonthName(next.Month, false)</p><p class="stat-figure">@next.Total.ToString("C0")</p></div> }
+                <div><p class="account-figure-label">Total pendiente</p><p class="stat-figure is-muted">@commitments.Months.Sum(m => m.Total).ToString("C0")</p></div>
+            </div>
+            <BarChart Label="Cuotas por cobrar por mes" Columns="CommitmentColumns" Selected="_selectedCommitment" SelectedChanged="i => _selectedCommitment = i" />
+            @if (_selectedCommitment >= 0 && _selectedCommitment < commitments.Months.Count)
+            {
+                var month = commitments.Months[_selectedCommitment];
+                <p class="chart-detail"><strong>@MonthName(month.Month, true)</strong> · @month.Total.ToString("C2")</p>
+            }
+            <ul class="chart-legend">
+                @foreach (var plan in _planOrder)
+                {
+                    var selected = _selectedCommitment >= 0 ? commitments.Months[_selectedCommitment].Plans.FirstOrDefault(p => p.FinancePlanId == plan.Id) : null;
+                    <li><span class="legend-dot series-@(plan.Series % BarChart.SeriesCount)"></span>@plan.Name @if (selected is not null) { <strong>@selected.Amount.ToString("C2")</strong> }</li>
+                }
+            </ul>
+            <p class="field-hint">Cuotas que aún no se cobran, en el mes de su corte. Antes de otra compra a meses, revisa cuánto suma ya cada mes.</p>
+        }
+    }
+</section>
+
+@* --- 4 y 5. Tarjetas por corte --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head">
+        <h2 class="section-title">Tarjetas por corte</h2>
+        @if (_cards is { Cards.Count: > 1 } cardsHead)
+        {
+            <select class="input input-compact" aria-label="Tarjeta" value="@_cardIndex" @onchange="CardChanged">
+                @for (var i = 0; i < cardsHead.Cards.Count; i++) { <option value="@i">@cardsHead.Cards[i].Name</option> }
+            </select>
+        }
+    </div>
+    <Alert Message="@_cardsError" />
+    @if (_cards is null && _cardsError is null) { <LoadingBlock /> }
+    else if (_cards is { Cards.Count: 0 }) { <p class="field-hint">No tienes tarjetas activas.</p> }
+    else if (SelectedCard is { } card)
+    {
+        var latest = card.Statements[^1];
+        <div class="stat-row">
+            <div><p class="account-figure-label">Uso al último corte</p><p class="stat-figure @UsageClass(latest.Usage)">@latest.Usage.ToString("P0")</p></div>
+            <div><p class="account-figure-label">Deuda al corte</p><p class="stat-figure">@latest.DebtAtCut.ToString("C0")</p></div>
+            <div><p class="account-figure-label">Límite</p><p class="stat-figure is-muted">@card.CreditLimit.ToString("C0")</p></div>
+        </div>
+        <BarChart Label="@($"Deuda de {card.Name} al cierre de cada corte")" Columns="CardColumns" Selected="_selectedCut" SelectedChanged="i => _selectedCut = i" />
+        @if (_selectedCut >= 0 && _selectedCut < card.Statements.Count)
+        {
+            var cut = card.Statements[_selectedCut];
+            <p class="chart-detail"><strong>Corte @cut.CutDate.ToString("dd MMM yyyy")</strong> · deuda @cut.DebtAtCut.ToString("C2") · @cut.Usage.ToString("P0") del límite</p>
+        }
+        <p class="field-hint">Cada barra es la deuda total al cierre del corte (incluye lo que falta de compras a meses); el contorno punteado es el límite.</p>
+
+        <h3 class="analytics-subtitle">Pagos contra lo que cortó</h3>
+        <ul class="statement-list">
+            @foreach (var cut in Enumerable.Reverse(card.Statements).Where(s => s.Total > 0 || s.Paid > 0))
+            {
+                var status = PaymentStatus(cut);
+                <li>
+                    <div>
+                        <p class="list-title">Corte @cut.CutDate.ToString("dd MMM")</p>
+                        <p class="list-subtitle">Cortó @cut.Total.ToString("C2") · pagaste @cut.Paid.ToString("C2")@(cut.DueDatePassed ? "" : $" · vence {cut.PaymentDueDate:dd MMM}")</p>
+                    </div>
+                    <span class="badge @status.Badge">@status.Text</span>
+                </li>
+            }
+        </ul>
+        <p class="field-hint">Cuenta los pagos entre el corte y su fecha límite. Pagar menos de lo que cortó antes de la fecha límite genera intereses.</p>
+    }
+</section>
+
+@* --- 6. Ingresos y ahorro --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head"><h2 class="section-title">Ingresos y ahorro</h2></div>
+    @if (_monthly is null) { @if (_monthlyError is null) { <LoadingBlock /> } }
+    else if (_monthly.Months.All(m => m.Income == 0))
+    {
+        <p class="field-hint">Registra tus ingresos (por ejemplo, tu sueldo) para ver cuánto ahorras cada mes.</p>
+    }
+    else
+    {
+        var withIncome = _monthly.Months.Where(m => m.Income > 0).ToList();
+        var rate = withIncome.Sum(m => m.Income) is var income and > 0 ? (income - withIncome.Sum(m => m.Total)) / income : 0;
+        var current = _monthly.Months[^1];
+        <div class="stat-row">
+            <div><p class="account-figure-label">Ingresos del mes</p><p class="stat-figure">@current.Income.ToString("C0")</p></div>
+            <div><p class="account-figure-label">Neto del mes</p><p class="stat-figure @(current.Income - current.Total < 0 ? "is-up" : null)">@((current.Income - current.Total).ToString("C0"))</p></div>
+            <div><p class="account-figure-label">Ahorro promedio</p><p class="stat-figure @(rate < 0 ? "is-up" : "is-down")">@rate.ToString("P0")</p></div>
+        </div>
+        <table class="flow-table">
+            <thead><tr><th scope="col">Mes</th><th scope="col">Ingresos</th><th scope="col">Gastos</th><th scope="col">Neto</th></tr></thead>
+            <tbody>
+                @foreach (var month in Enumerable.Reverse(_monthly.Months).Where(m => m.Income > 0 || m.Total > 0))
+                {
+                    var net = month.Income - month.Total;
+                    <tr><th scope="row">@MonthName(month.Month, true)</th><td>@month.Income.ToString("C0")</td><td>@month.Total.ToString("C0")</td><td class="@(net < 0 ? "text-warning" : "text-accent")">@net.ToString("C0")</td></tr>
+                }
+            </tbody>
+        </table>
+        <p class="field-hint">El ahorro promedio usa solo los meses con ingresos registrados. Los gastos incluyen las compras a meses por su total.</p>
+    }
+</section>
+
+@* --- 7. Servicios --- *@
+<section class="section card analytics-card">
+    <div class="analytics-head"><h2 class="section-title">Servicios</h2></div>
+    <Alert Message="@_servicesError" />
+    @if (_services is null && _servicesError is null) { <LoadingBlock /> }
+    else if (_services is { } services)
+    {
+        @if (services.Services.Count == 0)
+        {
+            <p class="field-hint">Liga tus gastos a un servicio (luz, internet, etc.) al registrarlos para ver cómo cambia cada recibo.</p>
+        }
+        else
+        {
+            <p class="stat-inline">Este mes: <strong>@services.Services.Sum(s => s.Current).ToString("C2")</strong> en servicios</p>
+            <ul class="service-list">
+                @foreach (var service in services.Services)
+                {
+                    var max = service.Amounts.DefaultIfEmpty(0).Max();
+                    <li>
+                        <div class="service-head">
+                            <div><p class="list-title">@service.Name</p><p class="list-subtitle">@service.ProviderName</p></div>
+                            <div class="service-amount">
+                                <strong>@(service.Current > 0 ? service.Current.ToString("C2") : "Sin pago este mes")</strong>
+                                @if (service.ChangeVsAverage is decimal change)
+                                {
+                                    <span class="badge @(change > 0.05m ? "badge-warning" : change < -0.05m ? "badge-success" : "badge-neutral")">@ChangeText(change)</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="sparkbars" aria-hidden="true">
+                            @for (var i = 0; i < service.Amounts.Count; i++)
+                            {
+                                <span class="@(i == service.Amounts.Count - 1 ? "is-current" : null)" style="height: @Pct(service.Amounts[i], max)" title="@($"{MonthName(services.Months[i], true)}: {service.Amounts[i]:C2}")"></span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+            <p class="field-hint">Las barras son los últimos @services.Months.Count meses; el porcentaje compara este mes contra el promedio de los meses anteriores en que lo pagaste.</p>
+        }
+    }
+</section>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+    private static DateOnly ThisMonth => new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private int _months = 12;
+    private MonthlySpendingDto? _monthly;
+    private string? _monthlyError;
+    private int _selectedMonth = -1;
+
+    private DateOnly _categoryMonth = ThisMonth;
+    private CategorySpendingDto? _categories;
+    private string? _categoriesError;
+    private bool _categoriesLoading = true;
+
+    private CommitmentsDto? _commitments;
+    private string? _commitmentsError;
+    private int _selectedCommitment = -1;
+    // Cada compra conserva su color en todos los meses: se asigna por orden de aparición.
+    private List<(Guid Id, string Name, int Series)> _planOrder = [];
+
+    private CardStatementsResponse? _cards;
+    private string? _cardsError;
+    private int _cardIndex, _selectedCut = -1;
+    private CardStatements? SelectedCard => _cards is { } c && _cardIndex < c.Cards.Count ? c.Cards[_cardIndex] : null;
+
+    private ServiceSpendingResponse? _services;
+    private string? _servicesError;
+
+    private bool _fromCache;
+
+    private IReadOnlyList<ChartColumn> CardColumns => SelectedCard is not { } card ? [] : card.Statements
+        .Select(s => new ChartColumn(MonthName(s.CutDate, false), [new ChartSegment(s.DebtAtCut, 0)], card.CreditLimit))
+        .ToList();
+
+    private IReadOnlyList<ChartColumn> MonthlyColumns => _monthly is null ? [] : _monthly.Months
+        .Select((m, i) => new ChartColumn(MonthName(m.Month, false),
+            [new ChartSegment(m.Expenses, 0), new ChartSegment(m.PlanPurchases, 1)],
+            i == _monthly.Months.Count - 1 ? _monthly.CurrentMonth.Projected : null))
+        .ToList();
+
+    private IReadOnlyList<ChartColumn> CommitmentColumns => _commitments is null ? [] : _commitments.Months
+        .Select(m => new ChartColumn(MonthName(m.Month, false),
+            _planOrder.Select(p => new ChartSegment(m.Plans.FirstOrDefault(x => x.FinancePlanId == p.Id)?.Amount ?? 0, p.Series)).ToList()))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cada bloque carga por su cuenta: si uno falla, los demás se muestran.
+        await Task.WhenAll(LoadMonthlyAsync(), LoadCategoriesAsync(), LoadCommitmentsAsync(), LoadCardsAsync(), LoadServicesAsync());
+    }
+
+    private async Task LoadMonthlyAsync()
+    {
+        var result = await Analytics.MonthlyAsync(_months);
+        _monthly = result.Success ? result.Data : null;
+        _monthlyError = result.Success ? null : result.Error;
+        _fromCache |= result.FromCache;
+        _selectedMonth = _monthly is null ? -1 : _monthly.Months.Count - 1;
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        _categoriesLoading = true;
+        var result = await Analytics.CategoriesAsync(_categoryMonth == ThisMonth ? null : _categoryMonth);
+        _categories = result.Success ? result.Data : null;
+        _categoriesError = result.Success ? null : result.Error;
+        _fromCache |= result.FromCache;
+        _categoriesLoading = false;
+    }
+
+    private async Task LoadCommitmentsAsync()
+    {
+        var result = await Analytics.CommitmentsAsync();
+        _commitments = result.Success ? result.Data : null;
+        _commitmentsError = result.Success ? null : result.Error;
+        _fromCache |= result.FromCache;
+        _planOrder = (_commitments?.Months ?? [])
+            .SelectMany(m => m.Plans)
+            .DistinctBy(p => p.FinancePlanId)
+            .Select((p, i) => (p.FinancePlanId, p.Name, i))
+            .ToList();
+        _selectedCommitment = _commitments?.Months.FindIndex(m => m.Total > 0) ?? -1;
+    }
+
+    private async Task LoadCardsAsync()
+    {
+        var result = await Analytics.CardsAsync();
+        _cards = result.Success ? result.Data : null;
+        _cardsError = result.Success ? null : result.Error;
+        _fromCache |= result.FromCache;
+        _cardIndex = 0;
+        _selectedCut = (SelectedCard?.Statements.Count ?? 0) - 1;
+    }
+
+    private async Task LoadServicesAsync()
+    {
+        var result = await Analytics.ServicesAsync();
+        _services = result.Success ? result.Data : null;
+        _servicesError = result.Success ? null : result.Error;
+        _fromCache |= result.FromCache;
+    }
+
+    private void CardChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var index)) return;
+        _cardIndex = index;
+        _selectedCut = (SelectedCard?.Statements.Count ?? 0) - 1;
+    }
+
+    // Mismos umbrales que la barra de uso en Cuentas.
+    private static string? UsageClass(decimal usage) => usage switch
+    {
+        > 0.9m => "is-danger",
+        > 0.7m => "is-up",
+        _ => null
+    };
+
+    private static (string Text, string Badge) PaymentStatus(CardStatement cut) => cut switch
+    {
+        { Total: 0 } => ("Sin cargos", "badge-neutral"),
+        _ when cut.Paid >= cut.Total => ("Pagado completo", "badge-success"),
+        { DueDatePassed: false } => ("Por pagar", "badge-neutral"),
+        { Paid: 0 } => ("Sin pago", "badge-danger"),
+        _ => ($"Pagado {cut.Paid / cut.Total:P0}", "badge-warning")
+    };
+
+    private async Task MonthsChangedAsync(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var months)) return;
+        _months = months; _monthly = null;
+        await LoadMonthlyAsync();
+    }
+
+    private async Task MoveCategoryMonthAsync(int delta)
+    {
+        _categoryMonth = _categoryMonth.AddMonths(delta);
+        await LoadCategoriesAsync();
+    }
+
+    private static string MonthName(DateOnly month, bool withYear) =>
+        month.ToString(withYear ? "MMM yyyy" : "MMM").TrimEnd('.');
+
+    private static string Pct(decimal value, decimal max) => (max == 0 ? 0 : value / max * 100).ToString("0.##", Invariant) + "%";
+
+    private static string ChangeText(decimal? change) => change switch
+    {
+        null => "—",
+        > 0 => $"▲ {change.Value:P0}",
+        < 0 => $"▼ {-change.Value:P0}",
+        _ => "="
+    };
+
+    // Gastar más que antes es la señal a vigilar: sube en ámbar, baja en verde.
+    private static string? ChangeClass(decimal? change) => change switch
+    {
+        > 0.1m => "is-up",
+        < -0.1m => "is-down",
+        _ => null
+    };
+}

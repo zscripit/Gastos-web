@@ -1,0 +1,61 @@
+@* Barras verticales apiladas hechas con HTML y CSS: se adaptan al ancho sin deformar el texto, siguen
+   el tema y no dependen de una librería de gráficas. Cada columna es un botón: al tocarla se selecciona
+   y la página muestra su detalle (en teléfono no hay hover). La proyección (Ghost) se dibuja como un
+   contorno punteado hasta su altura. *@
+
+<div class="bar-chart" role="group" aria-label="@Label">
+    <div class="bar-chart-plot">
+        <span class="bar-chart-grid" style="bottom: 50%"><span>@Short(Max / 2)</span></span>
+        <span class="bar-chart-grid" style="bottom: 100%"><span>@Short(Max)</span></span>
+        @for (var i = 0; i < Columns.Count; i++)
+        {
+            var index = i;
+            var column = Columns[i];
+            <button type="button" class="bar-col @(index == Selected ? "is-selected" : null)"
+                    aria-pressed="@(index == Selected ? "true" : "false")"
+                    aria-label="@($"{column.Label}: {column.Total:C2}")"
+                    @onclick="() => SelectedChanged.InvokeAsync(index)">
+                @if (column.Ghost is decimal ghost && ghost > column.Total)
+                {
+                    <span class="bar-ghost" style="height: @Pct(ghost)"></span>
+                }
+                <span class="bar-stack" style="height: @Pct(column.Total)">
+                    @foreach (var segment in column.Segments.Where(s => s.Value > 0))
+                    {
+                        <span class="bar-seg series-@(segment.Series % SeriesCount)" style="flex-grow: @segment.Value.ToString(Invariant)"></span>
+                    }
+                </span>
+            </button>
+        }
+    </div>
+    <div class="bar-chart-labels" aria-hidden="true">
+        @for (var i = 0; i < Columns.Count; i++)
+        {
+            <span class="@(i == Selected ? "is-selected" : null)">@Columns[i].Label</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ChartColumn> Columns { get; set; } = [];
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public int Selected { get; set; } = -1;
+    [Parameter] public EventCallback<int> SelectedChanged { get; set; }
+
+    /// <summary>Colores distintos definidos en operations.css (.series-0 … .series-5).</summary>
+    public const int SeriesCount = 6;
+
+    private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+    private decimal Max => Math.Max(1, Columns.Select(c => Math.Max(c.Total, c.Ghost ?? 0)).DefaultIfEmpty(0).Max());
+
+    private string Pct(decimal value) => (value / Max * 100).ToString("0.##", Invariant) + "%";
+
+    /// <summary>Monto corto para ejes y etiquetas: $950, $12.4k, $1.2M.</summary>
+    public static string Short(decimal value) => value switch
+    {
+        >= 1_000_000 => $"${value / 1_000_000:0.#}M",
+        >= 1_000 => $"${value / 1_000:0.#}k",
+        _ => $"${value:0}"
+    };
+}
