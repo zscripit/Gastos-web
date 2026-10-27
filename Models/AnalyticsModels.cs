@@ -70,6 +70,53 @@ public sealed class CommitmentPlan
     public decimal Amount { get; set; }
 }
 
+/// <summary>GET /Analytics/Cards: últimos cortes cerrados de cada tarjeta.</summary>
+public sealed class CardStatementsResponse
+{
+    public List<CardStatements> Cards { get; set; } = [];
+}
+
+public sealed class CardStatements
+{
+    public Guid FinanceAccountId { get; set; }
+    public string Name { get; set; } = "";
+    public decimal CreditLimit { get; set; }
+    /// <summary>Del corte más antiguo al más reciente.</summary>
+    public List<CardStatement> Statements { get; set; } = [];
+}
+
+public sealed class CardStatement
+{
+    public DateOnly CutDate { get; set; }
+    public DateOnly PaymentDueDate { get; set; }
+    /// <summary>Lo que cortó: gastos + cuotas del periodo.</summary>
+    public decimal Total { get; set; }
+    /// <summary>Pagos desde el corte hasta la fecha límite (u hoy).</summary>
+    public decimal Paid { get; set; }
+    public decimal DebtAtCut { get; set; }
+    public decimal Usage { get; set; }
+    public bool DueDatePassed { get; set; }
+}
+
+/// <summary>GET /Analytics/Services: gasto mensual por servicio.</summary>
+public sealed class ServiceSpendingResponse
+{
+    public List<DateOnly> Months { get; set; } = [];
+    public List<ServiceSpending> Services { get; set; } = [];
+}
+
+public sealed class ServiceSpending
+{
+    public Guid ServiceId { get; set; }
+    public string Name { get; set; } = "";
+    public string ProviderName { get; set; } = "";
+    public List<decimal> Amounts { get; set; } = [];
+    public decimal Current { get; set; }
+    public decimal? PreviousAverage { get; set; }
+
+    public decimal? ChangeVsAverage => PreviousAverage is > 0 && Current > 0 ? (Current - PreviousAverage.Value) / PreviousAverage.Value : null;
+}
+
 /// <summary>Columna de BarChart: segmentos apilados de abajo hacia arriba y, opcional, una proyección.</summary>
 public sealed record ChartColumn(string Label, IReadOnlyList<ChartSegment> Segments, decimal? Ghost = null)
 {

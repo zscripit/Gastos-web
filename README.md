@@ -61,7 +61,7 @@ regla, toda subida falla con "No se pudo subir el archivo".
 | `/cuentas/{id}/saldo` | Usuario | Saldo de la cuenta (con periodo si es tarjeta) |
 | `/categorias` | Usuario | Categorías |
 | `/servicios`, `/movimientos`, `/planes` | Usuario | Servicios, movimientos y compras a meses |
-| `/analisis` | Usuario | Gasto por mes con proyección, gasto por categoría contra el promedio y compras a meses por cobrar |
+| `/analisis` | Usuario | Gasto por mes con proyección, por categoría contra el promedio, compras a meses por cobrar, uso y pagos por corte de cada tarjeta, ingresos y ahorro, y servicios |
 | `/admin/bancos`, `/admin/proveedores` | SuperAdmin | Catálogos globales |
 | `/perfil` | Cualquiera con sesión | Datos de la cuenta; para usuarios, acceso con huella o rostro y recordatorios de pago |
 
