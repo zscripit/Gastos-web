@@ -136,6 +136,19 @@ public sealed class AccountBalanceDto
     public decimal? Debt { get; set; }
     public decimal? AvailableCredit { get; set; }
     public CreditPeriodDto? CurrentPeriod { get; set; }
+    /// <summary>Último corte cerrado cuya fecha límite no ha pasado: lo que hay que pagar ahora.</summary>
+    public CreditStatementDto? PendingStatement { get; set; }
+}
+public sealed class CreditStatementDto
+{
+    public DateOnly Start { get; set; }
+    public DateOnly CutDate { get; set; }
+    public DateOnly PaymentDueDate { get; set; }
+    public decimal Expenses { get; set; }
+    public decimal Installments { get; set; }
+    public decimal Total { get; set; }
+    public decimal PaidSinceCut { get; set; }
+    public decimal Remaining { get; set; }
 }
 public sealed class CreditPeriodDto
 {

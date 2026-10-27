@@ -22,10 +22,20 @@ else if (_balance is not null)
                 <div><dt>Límite de crédito</dt><dd>@_balance.CreditLimit?.ToString("C2")</dd></div>
             }
         </dl>
+        @if (_balance.PendingStatement is { } due)
+        {
+            <div class="statement-due @(due.Remaining == 0 ? "is-paid" : null)">
+                <h3>Pago del corte del @due.CutDate.ToString("dd MMM")</h3>
+                <p class="list-subtitle">@due.Start.ToString("dd MMM yyyy") al @due.CutDate.ToString("dd MMM yyyy") · límite @due.PaymentDueDate.ToString("dd MMM yyyy") (@DueText(due.PaymentDueDate))</p>
+                <p class="account-figure-label">@(due.Remaining == 0 ? "Cubierto" : "Por pagar")</p>
+                <p class="account-figure">@due.Remaining.ToString("C2")</p>
+                <dl class="balance-grid"><div><dt>Total del corte</dt><dd>@due.Total.ToString("C2")</dd></div><div><dt>Gastos</dt><dd>@due.Expenses.ToString("C2")</dd></div><div><dt>Cuotas a meses</dt><dd>@due.Installments.ToString("C2")</dd></div><div><dt>Pagado desde el corte</dt><dd>@due.PaidSinceCut.ToString("C2")</dd></div></dl>
+            </div>
+        }
         @if (_balance.CurrentPeriod is { } period)
         {
             <h3>Periodo en curso</h3><p>@period.Start.ToString("dd MMM yyyy") al @period.CutDate.ToString("dd MMM yyyy")</p>
-            <dl class="balance-grid"><div><dt>Fecha límite de pago</dt><dd>@period.PaymentDueDate.ToString("dd MMM yyyy")</dd></div><div><dt>Gastos del periodo</dt><dd>@period.Expenses.ToString("C2")</dd></div><div><dt>Cuotas a meses</dt><dd>@period.Installments.ToString("C2")</dd></div><div><dt>Pagos realizados</dt><dd>@period.Payments.ToString("C2")</dd></div><div><dt>Total que va a cortar</dt><dd>@period.Total.ToString("C2")</dd></div></dl>
+            <dl class="balance-grid"><div><dt>Fecha límite de pago</dt><dd>@period.PaymentDueDate.ToString("dd MMM yyyy")</dd></div><div><dt>Gastos del periodo</dt><dd>@period.Expenses.ToString("C2")</dd></div><div><dt>Cuotas a meses</dt><dd>@period.Installments.ToString("C2")</dd></div><div><dt>Pagos en el periodo</dt><dd>@period.Payments.ToString("C2")</dd></div><div><dt>Total que va a cortar</dt><dd>@period.Total.ToString("C2")</dd></div></dl>
         }
         <div class="operation-actions"><a class="btn btn-secondary" href="movimientos">Movimientos</a><a class="btn btn-secondary" href="@($"cuentas/{AccountId}/editar")">Editar cuenta</a></div>
     </section>
@@ -35,6 +45,12 @@ else if (_balance is not null)
     private AccountBalanceDto? _balance;
     private string? _error;
     private bool _loading = true;
+
+    private static string DueText(DateOnly date)
+    {
+        var days = date.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+        return days switch { 0 => "hoy", 1 => "mañana", _ => $"en {days} días" };
+    }
     protected override async Task OnParametersSetAsync()
     {
         _loading = true; _error = null; _balance = null;
