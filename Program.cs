@@ -48,6 +48,7 @@ builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<OperationsService>();
+builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<AttachmentService>();
 builder.Services.AddScoped<PushService>();
 builder.Services.AddScoped<PasskeyService>();

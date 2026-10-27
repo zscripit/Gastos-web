@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
 @inject OperationsService Operations
+@inject AnalyticsService Analytics
 
 <PageTitle>Inicio · Gastos</PageTitle>
 
@@ -29,6 +30,36 @@ else if (_error is not null)
 }
 else
 {
+    @* Resumen del mes: carga aparte para no retrasar los pagos, que son lo urgente. Si falla, no se muestra. *@
+    @if (_monthly is not null || _commitments is not null)
+    {
+        <a class="month-summary card" href="analisis">
+            @if (_monthly?.CurrentMonth is { } month)
+            {
+                <div>
+                    <p class="account-figure-label">Gasto del mes</p>
+                    <p class="stat-figure">@month.SpentToDate.ToString("C0")</p>
+                    <p class="list-subtitle">
+                        Proyección @month.Projected.ToString("C0")
+                        @if (month.ChangeVsPrevious is decimal change)
+                        {
+                            <text> </text><span class="@(change > 0.1m ? "text-warning" : change < -0.1m ? "text-accent" : null)">· @(change >= 0 ? "▲" : "▼") @Math.Abs(change).ToString("P0") vs. mes anterior</span>
+                        }
+                    </p>
+                </div>
+            }
+            @if (_commitments?.Months.Skip(1).FirstOrDefault() is { } next)
+            {
+                <div>
+                    <p class="account-figure-label">Cuotas a meses en @next.Month.ToString("MMMM")</p>
+                    <p class="stat-figure">@next.Total.ToString("C0")</p>
+                    <p class="list-subtitle">@next.Plans.Count @(next.Plans.Count == 1 ? "compra" : "compras")</p>
+                </div>
+            }
+            <span class="month-summary-link">Ver análisis ›</span>
+        </a>
+    }
+
     <div class="dashboard">
     <section class="section">
         <h2 class="section-title">Próximos pagos de tarjeta</h2>
@@ -124,9 +155,12 @@ else
     private List<ActiveAccountDto> _others = [];
     private bool _loading = true;
     private string? _error;
+    private MonthlySpendingDto? _monthly;
+    private CommitmentsDto? _commitments;
 
     protected override async Task OnInitializedAsync()
     {
+        _ = LoadSummaryAsync();
         var result = await Accounts.GetActiveAsync();
 
         if (!result.Success)
@@ -157,6 +191,15 @@ else
         }
 
         _loading = false;
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        var monthly = Analytics.MonthlyAsync(2);
+        var commitments = Analytics.CommitmentsAsync(2);
+        _monthly = (await monthly).Data;
+        _commitments = (await commitments).Data;
+        StateHasChanged();
     }
 
     private static string PaymentLabel(ActiveAccountDto card) => card.DaysUntilPayment switch
