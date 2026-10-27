@@ -51,6 +51,8 @@ public sealed class OperationsService(ApiClient api)
             date = Offset(form.Date), form.FinanceAccountId, form.FirstInstallmentDate });
     public Task<ApiResult<object>> SettleAsync(Guid id, DateOnly? date, decimal? amount) =>
         api.PostAsync<object>($"/api/FinancePlan/{id}/Settle", new { settleDate = date, payoffAmount = amount });
+    public Task<ApiResult<List<int>>> SetPaidInstallmentsAsync(Guid id, IEnumerable<int> paid) =>
+        api.PutAsync<List<int>>($"/api/FinancePlan/{id}/PaidInstallments", new { paidInstallments = paid.Order().ToList() });
     public Task<ApiResult<object>> DeletePlanAsync(Guid id) => api.DeleteAsync<object>($"/api/FinancePlan/{id}");
     public Task<ApiResult<AccountBalanceDto>> BalanceAsync(Guid id) =>
         api.GetAsync<AccountBalanceDto>($"/api/FinanceAccount/{id}/Balance");

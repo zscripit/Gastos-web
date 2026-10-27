@@ -43,8 +43,19 @@ else
     {
         <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@_selected.FinanceAccountName · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest.ToString("0.##")%</p>
             @if (_selected.SettledOn is DateOnly settled) { <p>Liquidada el @settled.ToString("dd MMM yyyy")</p> }
-            <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item"><div>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</div><div>@installment.Amount.ToString("C2") @if (installment.Paid) { <span class="badge badge-success">Pagada</span> } else { <span class="badge">@(installment.Charged ? "Cobrada" : "Por cobrar")</span> }</div></li> }</ul>
-            <p class="field-hint">Una cuota cobrada ya llegó a su fecha; no significa que hayas pagado la tarjeta. Las marcadas como pagadas tienen su pago registrado desde que se dio de alta la compra.</p>
+            <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item">@if (installment.Charged)
+                {
+                    <label class="check-row"><input type="checkbox" class="checkbox" disabled="@_busy" checked="@_paid.Contains(installment.Number)" @onchange="e => ToggleDetailPaid(installment.Number, e)" aria-label="@($"Cuota {installment.Number} pagada")" /><span>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</span></label>
+                }
+                else
+                {
+                    <div>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</div>
+                }<div>@installment.Amount.ToString("C2") @if (installment.Paid) { <span class="badge badge-success">Pagada</span> } else { <span class="badge">@(installment.Charged ? "Cobrada" : "Por cobrar")</span> }</div></li> }</ul>
+            <p class="field-hint">Una cuota cobrada ya llegó a su fecha; no significa que hayas pagado la tarjeta. Marca las que ya pagaste: por cada una se registra un pago a la tarjeta, y al desmarcarla ese pago se borra.</p>
+            @if (PaidChanged)
+            {
+                <div class="operation-actions"><button class="btn btn-primary" type="button" disabled="@_busy" @onclick="SavePaidAsync">Guardar cuotas pagadas</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="ResetPaid">Descartar cambios</button></div>
+            }
             <fieldset disabled="@_busy">
                 @if (_selected.SettledOn is null && _selected.Installments.Any(x => !x.Charged))
                 {
@@ -129,6 +140,28 @@ else
         if (AllPaid) _form.PaidInstallments.Clear();
         else _form.PaidInstallments.UnionWith(_schedule.Where(x => x.Charged).Select(x => x.Number));
     }
+    private HashSet<int> _paid = [];
+    private bool PaidChanged => _selected is not null && !_paid.SetEquals(_selected.Installments.Where(x => x.Paid).Select(x => x.Number));
+    private void ResetPaid() => _paid = _selected?.Installments.Where(x => x.Paid).Select(x => x.Number).ToHashSet() ?? [];
+    private void ToggleDetailPaid(int number, ChangeEventArgs e)
+    {
+        if (e.Value is true) _paid.Add(number); else _paid.Remove(number);
+    }
+    private async Task SavePaidAsync()
+    {
+        if (_busy || _selected is null) return;
+        _busy = true; _error = null;
+        try
+        {
+            var id = _selected.Id;
+            var result = await Operations.SetPaidInstallmentsAsync(id, _paid);
+            if (!result.Success) { _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)); return; }
+            var detail = await Operations.PlanAsync(id);
+            if (detail.Success) { _selected = detail.Data; ResetPaid(); }
+            await FetchAsync();
+        }
+        finally { _busy = false; }
+    }
     private void Close() { _selected = null; _confirm = null; _settleDate = null; _payoff = null; }
     private async Task LoadAsync()
     {
@@ -145,7 +178,7 @@ else
     {
         if (_busy) return;
         _busy = true; _error = null; Close();
-        try { var result = await Operations.PlanAsync(id); if (result.Success) { _selected = result.Data; _form = null; } else _error = result.Error; }
+        try { var result = await Operations.PlanAsync(id); if (result.Success) { _selected = result.Data; _form = null; ResetPaid(); } else _error = result.Error; }
         finally { _busy = false; }
     }
     private async Task SaveAsync()
