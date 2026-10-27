@@ -522,6 +522,14 @@ select.input {
     padding-right: 34px;
 }
 
+/* El fondo del select es translúcido, y en Windows la lista de opciones no lo
+   hereda: sale clara con el texto blanco del campo. Se le da fondo y texto sólidos. */
+select.input option,
+select.input optgroup {
+    background-color: var(--bg-deep);
+    color: var(--text);
+}
+
 .checkbox { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 1px; }
 
 .validation-message {

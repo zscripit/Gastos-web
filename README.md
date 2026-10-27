@@ -101,9 +101,9 @@ máximo de línea aunque sobre monitor.
 
 Implementado: landing pública en `/` (quien ya tiene sesión salta a `/inicio`), registro, login, sesión persistente y expiración, resumen con
 próximos pagos de tarjeta, alta/edición de cuentas de débito-ahorro-efectivo,
-alta/edición de tarjetas de crédito, categorías (alta y archivar/reactivar).
+alta/edición de tarjetas de crédito, listado de cuentas en tarjetas con saldo, crédito disponible y uso del límite, categorías (alta y archivar/reactivar).
 
-También implementado según OpenAPI: servicios (alta, edición y archivo), movimientos (alta, edición, eliminación, filtros, paginación y vista de detalle de solo lectura al tocar la tarjeta), comprobantes por movimiento (tocar el comprobante lo abre en el visor, que permite descargarlo), pagos de tarjeta vinculados a una cuenta de origen, compras a meses (alta, calendario, liquidación anticipada y eliminación) y saldos por cuenta con periodo de tarjeta.
+También implementado según OpenAPI: servicios (alta, edición y archivo), movimientos (alta, edición, eliminación, filtros, paginación y vista de detalle de solo lectura al tocar la tarjeta), comprobantes por movimiento (tocar el comprobante lo abre en el visor, que permite descargarlo), pagos de tarjeta vinculados a una cuenta de origen, compras a meses (alta con selector de cuotas ya pagadas, calendario, liquidación anticipada y eliminación) y saldos por cuenta con periodo de tarjeta.
 
 Funciones móviles (etapa 2 de la materia):
 

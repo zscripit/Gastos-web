@@ -98,6 +98,16 @@ public sealed class InstallmentDto
     public decimal Amount { get; set; }
     public DateOnly Date { get; set; }
     public bool Charged { get; set; }
+    /// <summary>Tiene un pago registrado al crear la compra (cuota pagada antes de usar la app).</summary>
+    public bool Paid { get; set; }
+}
+/// <summary>Cuota de POST /FinancePlan/Schedule: el calendario antes de guardar la compra.</summary>
+public sealed class ScheduleItemDto
+{
+    public int Number { get; set; }
+    public decimal Amount { get; set; }
+    public DateOnly Date { get; set; }
+    public bool Charged { get; set; }
 }
 public sealed class FinancePlanForm
 {
@@ -110,6 +120,8 @@ public sealed class FinancePlanForm
     public Guid? FinanceAccountId { get; set; }
     public Guid? CategoryId { get; set; }
     public DateOnly? FirstInstallmentDate { get; set; }
+    /// <summary>Cuotas ya cobradas que el usuario ya pagó; la API registra un pago por cada una.</summary>
+    public HashSet<int> PaidInstallments { get; set; } = [];
 }
 public sealed class AccountBalanceDto
 {
