@@ -17,22 +17,34 @@ else
             <EditForm Model="_form" OnValidSubmit="SaveAsync" FormName="plan"><DataAnnotationsValidator /><ValidationSummary /><fieldset disabled="@_busy">
                 <label class="field"><span class="field-label">Nombre</span><InputTextLive class="input" @bind-Value="_form.Name" maxlength="50" /></label>
                 <label class="field"><span class="field-label">Descripción</span><InputTextAreaLive class="input" @bind-Value="_form.Description" /></label>
-                <div class="field-row"><label class="field"><span class="field-label">Precio sin intereses</span><InputNumberLive class="input" @bind-Value="_form.Amount" step="0.01" /></label><label class="field"><span class="field-label">Interés total (%)</span><InputNumberLive class="input" @bind-Value="_form.Interest" step="0.01" /></label></div>
-                <div class="field-row"><label class="field"><span class="field-label">Meses (2 a 48)</span><InputNumberLive class="input" @bind-Value="_form.Months" /></label><label class="field"><span class="field-label">Fecha de compra</span><InputDateLive class="input" @bind-Value="_form.Date" /></label></div>
-                <label class="field"><span class="field-label">Tarjeta</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId"><option value="">Selecciona…</option>@foreach (var account in _accounts.Where(x => x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                <div class="field-row"><label class="field"><span class="field-label">Precio sin intereses</span><InputNumberLive class="input" @bind-Value="_form.Amount" step="0.01" @bind-Value:after="ScheduleChanged" /></label><label class="field"><span class="field-label">Interés total (%)</span><InputNumberLive class="input" @bind-Value="_form.Interest" step="0.01" @bind-Value:after="ScheduleChanged" /></label></div>
+                <div class="field-row"><label class="field"><span class="field-label">Meses (2 a 48)</span><InputNumberLive class="input" @bind-Value="_form.Months" @bind-Value:after="ScheduleChanged" /></label><label class="field"><span class="field-label">Fecha de compra</span><InputDateLive class="input" @bind-Value="_form.Date" @bind-Value:after="ScheduleChanged" /></label></div>
+                <label class="field"><span class="field-label">Tarjeta</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId" @bind-Value:after="ScheduleChanged"><option value="">Selecciona…</option>@foreach (var account in _accounts.Where(x => x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
                 <label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_form.CategoryId"><option value="">Selecciona…</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label>
-                <label class="field"><span class="field-label">Primera cuota (opcional)</span><InputDateLive class="input" @bind-Value="_form.FirstInstallmentDate" /><span class="field-hint">Déjala vacía para usar el primer corte después de la compra.</span></label>
+                <label class="field"><span class="field-label">Primera cuota (opcional)</span><InputDateLive class="input" @bind-Value="_form.FirstInstallmentDate" @bind-Value:after="ScheduleChanged" /><span class="field-hint">Déjala vacía para usar el primer corte después de la compra.</span></label>
                 <p class="field-hint">Usa interés 0 para MSI. La compra completa se registra como deuda; las cuotas indican lo que se cobra cada mes.</p>
+                @if (_schedule.Any(x => x.Charged))
+                {
+                    <fieldset class="paid-installments">
+                        <legend class="field-label">¿Ya pagaste alguna de las cuotas cobradas?</legend>
+                        <p class="field-hint">Por cada cuota marcada se registra un pago a la tarjeta, para que el crédito disponible coincida con el de tu banco.</p>
+                        @foreach (var item in _schedule.Where(x => x.Charged))
+                        {
+                            <label class="check-row"><input type="checkbox" class="checkbox" checked="@_form.PaidInstallments.Contains(item.Number)" @onchange="e => TogglePaid(item.Number, e)" /><span>Cuota @item.Number · @item.Date.ToString("dd MMM yyyy") · @item.Amount.ToString("C2")</span></label>
+                        }
+                        <button class="btn btn-ghost btn-sm" type="button" @onclick="ToggleAllPaid">@(AllPaid ? "Desmarcar todas" : "Marcar todas")</button>
+                    </fieldset>
+                }
                 <div class="operation-actions"><button class="btn btn-primary" type="submit">Guardar</button><button class="btn btn-secondary" type="button" @onclick="() => _form = null">Cancelar</button></div>
             </fieldset></EditForm>
         </section>
     }
     @if (_selected is not null)
     {
-        <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@_selected.FinanceAccountName · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest%</p>
+        <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@_selected.FinanceAccountName · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest.ToString("0.##")%</p>
             @if (_selected.SettledOn is DateOnly settled) { <p>Liquidada el @settled.ToString("dd MMM yyyy")</p> }
-            <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item"><div>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</div><div>@installment.Amount.ToString("C2") <span class="badge">@(installment.Charged ? "Cobrada" : "Por cobrar")</span></div></li> }</ul>
-            <p class="field-hint">Una cuota cobrada ya llegó a su fecha; no significa que hayas pagado la tarjeta.</p>
+            <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item"><div>Cuota @installment.Number · @installment.Date.ToString("dd MMM yyyy")</div><div>@installment.Amount.ToString("C2") @if (installment.Paid) { <span class="badge badge-success">Pagada</span> } else { <span class="badge">@(installment.Charged ? "Cobrada" : "Por cobrar")</span> }</div></li> }</ul>
+            <p class="field-hint">Una cuota cobrada ya llegó a su fecha; no significa que hayas pagado la tarjeta. Las marcadas como pagadas tienen su pago registrado desde que se dio de alta la compra.</p>
             <fieldset disabled="@_busy">
                 @if (_selected.SettledOn is null && _selected.Installments.Any(x => !x.Charged))
                 {
@@ -47,7 +59,7 @@ else
             </fieldset>
             @if (_confirm is not null)
             {
-                <div role="alert" class="section"><p>@(_confirm == ConfirmAction.Delete ? "¿Eliminar definitivamente la compra, sus cuotas y el gasto en la tarjeta?" : "¿Confirmar la liquidación? El calendario será reemplazado y no se podrá liquidar de nuevo.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="ConfirmAsync">Confirmar</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _confirm = null">Cancelar</button></div></div>
+                <div role="alert" class="section"><p>@(_confirm == ConfirmAction.Delete ? "¿Eliminar definitivamente la compra, sus cuotas, el gasto en la tarjeta y los pagos de cuotas registrados al darla de alta?" : "¿Confirmar la liquidación? El calendario será reemplazado y no se podrá liquidar de nuevo.")</p><div class="operation-actions"><button class="btn btn-danger" type="button" disabled="@_busy" @onclick="ConfirmAsync">Confirmar</button><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => _confirm = null">Cancelar</button></div></div>
             }
         </section>
     }
@@ -79,7 +91,44 @@ else
         _accounts = accounts.Data ?? []; _categories = categories.Data ?? [];
         await LoadAsync(); _error ??= accounts.Error ?? categories.Error; _loading = false;
     }
-    private void New() { _form = new(); Close(); _error = null; }
+    private List<ScheduleItemDto> _schedule = [];
+    private CancellationTokenSource? _scheduleCts;
+    private bool AllPaid => _form is not null && _schedule.Where(x => x.Charged).All(x => _form.PaidInstallments.Contains(x.Number));
+    private void New() { _form = new(); _schedule = []; Close(); _error = null; }
+
+    // El calendario lo calcula la API (mismo cálculo que al guardar). Se pide un momento después
+    // del último cambio, para no hacer una petición por cada tecla en los campos numéricos.
+    private async Task ScheduleChanged()
+    {
+        _scheduleCts?.Cancel();
+        var cts = _scheduleCts = new CancellationTokenSource();
+        var form = _form;
+        if (form is null || form.FinanceAccountId is null || form.Amount <= 0 || form.Months is < 2 or > 48 || form.Interest is < 0 or > 100)
+        {
+            _schedule = [];
+            return;
+        }
+        try { await Task.Delay(400, cts.Token); } catch (TaskCanceledException) { return; }
+
+        var result = await Operations.PlanScheduleAsync(form);
+        if (cts.IsCancellationRequested || _form != form) return;
+        _schedule = result.Success ? result.Data ?? [] : [];
+        // Una cuota que dejó de estar cobrada (cambió la fecha) ya no puede ir marcada.
+        form.PaidInstallments.RemoveWhere(n => !_schedule.Any(x => x.Number == n && x.Charged));
+    }
+
+    private void TogglePaid(int number, ChangeEventArgs e)
+    {
+        if (_form is null) return;
+        if (e.Value is true) _form.PaidInstallments.Add(number); else _form.PaidInstallments.Remove(number);
+    }
+
+    private void ToggleAllPaid()
+    {
+        if (_form is null) return;
+        if (AllPaid) _form.PaidInstallments.Clear();
+        else _form.PaidInstallments.UnionWith(_schedule.Where(x => x.Charged).Select(x => x.Number));
+    }
     private void Close() { _selected = null; _confirm = null; _settleDate = null; _payoff = null; }
     private async Task LoadAsync()
     {

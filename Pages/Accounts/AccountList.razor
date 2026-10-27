@@ -1,13 +1,14 @@
 @page "/cuentas"
 @attribute [Authorize(Policy = Policies.Operational)]
 @inject AccountService Accounts
+@inject NavigationManager Nav
 
 <PageTitle>Cuentas · Gastos</PageTitle>
 
 <header class="page-header page-header-actions">
     <div>
         <h1>Cuentas</h1>
-        <p class="page-subtitle">Incluye las archivadas</p>
+        <p class="page-subtitle">Saldo y crédito disponible de un vistazo</p>
     </div>
     <a class="btn btn-primary btn-sm" href="cuentas/nueva"><Icon Name="plus" Size="16" /> Nueva</a>
 </header>
@@ -20,7 +21,7 @@ else if (_error is not null)
 {
     <Alert Message="@_error" />
 }
-else if (_accounts.Count == 0)
+else if (_active.Count == 0 && _archived.Count == 0)
 {
     <EmptyState Title="Aún no registras cuentas"
                 Description="Empieza con la cuenta donde recibes tu nómina o con tu tarjeta principal.">
@@ -29,57 +30,120 @@ else if (_accounts.Count == 0)
 }
 else
 {
-    <ul class="list">
-        @foreach (var account in _accounts)
+    @if (_fromCache)
+    {
+        <Alert Message="Sin conexión: se muestran los últimos saldos guardados en este dispositivo." Kind="info" />
+    }
+
+    @* Tocar la tarjeta abre el saldo y el periodo; Editar no la abre. *@
+    <ul class="account-grid">
+        @foreach (var account in _active)
         {
-            <li class="list-item @(account.IsArchived ? "is-archived" : null)">
-                <div class="list-lead">
-                    <Glyph Name="@account.BankName" IconUrl="@account.BankIconUrl" />
-                    <div>
-                        <p class="list-title">@account.Name</p>
-                        <p class="list-subtitle">@account.BankName</p>
-                        @if (!string.IsNullOrWhiteSpace(account.Description))
-                        {
-                            <p class="list-note">@account.Description</p>
-                        }
+            <li class="card account-card is-clickable" role="button" tabindex="0" title="Ver saldo"
+                @onclick="() => Open(account)" @onkeydown="e => OpenByKey(e, account)">
+                <div class="account-card-head">
+                    <div class="list-lead">
+                        <Glyph Name="@account.BankName" IconUrl="@account.BankIconUrl" />
+                        <div>
+                            <p class="list-title">@account.Name</p>
+                            <p class="list-subtitle">@account.BankName · @account.AccountType.DisplayName()</p>
+                        </div>
                     </div>
+                    <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/editar")" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true">Editar</a>
                 </div>
-                <div class="list-actions">
-                    @if (account.IsArchived)
+
+                @if (account.IsCredit && account.CreditLimit is decimal limit)
+                {
+                    var used = Math.Max(0, -account.Balance);
+                    var available = account.AvailableCredit ?? limit - used;
+                    var ratio = limit > 0 ? Math.Min(1, used / limit) : 0;
+                    <p class="account-figure-label">Disponible</p>
+                    <p class="account-figure @(available < 0 ? "is-negative" : null)">@available.ToString("C2")</p>
+                    <div class="usage-bar @UsageClass(ratio)" role="progressbar" aria-label="Uso del límite"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="@((int)(ratio * 100))">
+                        <span style="width: @((ratio * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%"></span>
+                    </div>
+                    <p class="list-subtitle">Usado @used.ToString("C2") de @limit.ToString("C2") · @((int)Math.Round(ratio * 100))%</p>
+                    @if (account.CutDay is int cut && account.PayDay is int pay)
                     {
-                        <span class="badge badge-neutral">Archivada</span>
+                        <p class="list-note">Corte el día @cut · Pago el día @pay</p>
                     }
-                    <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/saldo")">Saldo</a>
-                    <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/editar")">Editar</a>
-                </div>
+                }
+                else
+                {
+                    <p class="account-figure-label">Saldo</p>
+                    <p class="account-figure @(account.Balance < 0 ? "is-negative" : null)">@account.Balance.ToString("C2")</p>
+                }
             </li>
         }
     </ul>
+
+    @if (_archived.Count > 0)
+    {
+        <section class="section">
+            <h2 class="section-title">Archivadas</h2>
+            <ul class="list">
+                @foreach (var account in _archived)
+                {
+                    <li class="list-item is-archived">
+                        <div class="list-lead">
+                            <Glyph Name="@account.BankName" IconUrl="@account.BankIconUrl" />
+                            <div>
+                                <p class="list-title">@account.Name</p>
+                                <p class="list-subtitle">@account.BankName</p>
+                            </div>
+                        </div>
+                        <div class="list-actions">
+                            <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/saldo")">Saldo</a>
+                            <a class="btn btn-ghost btn-sm" href="@($"cuentas/{account.Id}/editar")">Editar</a>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
 }
 
 @code {
-    private List<FinanceAccountListItem> _accounts = [];
+    private List<ActiveAccountDto> _active = [];
+    private List<FinanceAccountListItem> _archived = [];
 
-
-    private bool _loading = true;
+    private bool _loading = true, _fromCache;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Accounts.GetAllAsync();
+        // Las activas traen el saldo calculado; las archivadas solo salen en el listado completo.
+        var active = await Accounts.GetActiveAsync();
+        var all = await Accounts.GetAllAsync();
 
-        if (result.Success)
+        if (active.Success && all.Success)
         {
-            _accounts = (result.Data ?? [])
-                .OrderBy(a => a.IsArchived)
-                .ThenBy(a => a.Name)
-                .ToList();
+            // Primero las tarjetas, que es lo que más se consulta; luego el resto, por nombre.
+            _active = (active.Data ?? []).OrderBy(a => !a.IsCredit).ThenBy(a => a.Name).ToList();
+            _archived = (all.Data ?? []).Where(a => a.IsArchived).OrderBy(a => a.Name).ToList();
+            _fromCache = active.FromCache;
         }
         else
         {
-            _error = result.Error;
+            _error = active.Error ?? all.Error;
         }
 
         _loading = false;
     }
+
+    private void Open(ActiveAccountDto account) => Nav.NavigateTo($"cuentas/{account.Id}/saldo");
+
+    private void OpenByKey(KeyboardEventArgs e, ActiveAccountDto account)
+    {
+        if (e.Key is "Enter" or " ") Open(account);
+    }
+
+    // Verde hasta 70 % del límite, ámbar hasta 90 % y rojo arriba de eso.
+    private static string UsageClass(decimal ratio) => ratio switch
+    {
+        > 0.9m => "is-danger",
+        > 0.7m => "is-warning",
+        _ => "is-ok"
+    };
 }
