@@ -23,7 +23,7 @@ else
             <dl class="detail-grid">
                 <div><dt>Tipo</dt><dd>@TypeLabel(detail.TransactionType)</dd></div>
                 <div><dt>Fecha</dt><dd>@detail.Date.ToLocalTime().ToString("dd MMM yyyy")</dd></div>
-                <div><dt>Cuenta</dt><dd>@detail.FinanceAccountName</dd></div>
+                <div><dt>Cuenta</dt><dd>@AccountName(detail.FinanceAccountId, detail.FinanceAccountName)</dd></div>
                 @if (!string.IsNullOrEmpty(detail.CategoryName)) { <div><dt>Categoría</dt><dd>@detail.CategoryName</dd></div> }
                 @if (!string.IsNullOrEmpty(detail.ServiceName)) { <div><dt>Servicio</dt><dd>@detail.ServiceName</dd></div> }
                 @if (!string.IsNullOrWhiteSpace(detail.Description)) { <div class="detail-wide"><dt>Descripción</dt><dd>@detail.Description</dd></div> }
@@ -50,7 +50,7 @@ else
                     @if (_id is null)
                     {
                         <label class="field"><span class="field-label">Tipo</span><InputSelect class="input" @bind-Value="_form.TransactionType" @bind-Value:after="TypeChanged"><option value="Expense">Gasto</option><option value="Income">Ingreso</option><option value="Payment">Pago de tarjeta</option></InputSelect></label>
-                        <label class="field"><span class="field-label">@(_form.TransactionType == TransactionType.Payment ? "Tarjeta que recibe el pago" : "Cuenta")</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId"><option value="">Selecciona…</option>@foreach (var account in SelectableAccounts) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                        <label class="field"><span class="field-label">@(_form.TransactionType == TransactionType.Payment ? "Tarjeta que recibe el pago" : "Cuenta")</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId"><option value="">Selecciona…</option>@foreach (var account in SelectableAccounts) { <option value="@account.Id">@account.Label</option> }</InputSelect></label>
                     }
                     else { <p class="field-hint">@_accountName · @TypeLabel(_form.TransactionType). La cuenta y el tipo se conservan.</p> }
                     @if (_form.TransactionType != TransactionType.Payment && !_linked)
@@ -63,7 +63,7 @@ else
                     }
                     @if (_id is null && _form.TransactionType == TransactionType.Payment)
                     {
-                        <label class="field"><span class="field-label">Cuenta de origen (opcional)</span><InputSelect class="input" @bind-Value="_form.SourceAccountId"><option value="">Sin registrar salida en otra cuenta</option>@foreach (var account in _accounts.Where(x => !x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                        <label class="field"><span class="field-label">Cuenta de origen (opcional)</span><InputSelect class="input" @bind-Value="_form.SourceAccountId"><option value="">Sin registrar salida en otra cuenta</option>@foreach (var account in _accounts.Where(x => !x.IsCredit)) { <option value="@account.Id">@account.Label</option> }</InputSelect></label>
                         <p class="field-hint">Si eliges una cuenta, también se registra la salida del dinero.</p>
                     }
                     @if (_linked) { <p class="field-hint">Este movimiento forma parte de un pago. Los cambios se aplican también al movimiento vinculado.</p> }
@@ -74,7 +74,7 @@ else
         </section>
     }
     <details class="section operation-filters"><summary>Filtrar movimientos</summary>
-        <div class="field-row"><label class="field"><span class="field-label">Cuenta</span><InputSelect class="input" @bind-Value="_accountFilter"><option value="">Todas</option>@foreach (var account in _allAccounts) { <option value="@account.Id">@account.Name</option> }</InputSelect></label><label class="field"><span class="field-label">Tipo</span><InputSelect class="input" @bind-Value="_typeFilter"><option value="">Todos</option><option value="Income">Ingresos</option><option value="Expense">Gastos</option><option value="Payment">Pagos</option></InputSelect></label></div>
+        <div class="field-row"><label class="field"><span class="field-label">Cuenta</span><InputSelect class="input" @bind-Value="_accountFilter"><option value="">Todas</option>@foreach (var account in _allAccounts) { <option value="@account.Id">@account.Label</option> }</InputSelect></label><label class="field"><span class="field-label">Tipo</span><InputSelect class="input" @bind-Value="_typeFilter"><option value="">Todos</option><option value="Income">Ingresos</option><option value="Expense">Gastos</option><option value="Payment">Pagos</option></InputSelect></label></div>
         <div class="field-row"><label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_categoryFilter"><option value="">Todas</option>@foreach (var category in _allCategories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label><label class="field"><span class="field-label">Servicio</span><InputSelect class="input" @bind-Value="_serviceFilter"><option value="">Todos</option>@foreach (var service in _allServices) { <option value="@service.Id">@service.Name</option> }</InputSelect></label></div>
         <div class="field-row"><label class="field"><span class="field-label">Desde</span><InputDateLive class="input" @bind-Value="_from" /></label><label class="field"><span class="field-label">Hasta</span><InputDateLive class="input" @bind-Value="_to" /></label></div>
         <button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="ApplyFiltersAsync">Aplicar filtros</button>
@@ -85,6 +85,7 @@ else
     }
     @if (Sync.Pending.Count > 0)
     {
+        <h2 class="day-header"><span>Pendientes de sincronizar</span></h2>
         <ul class="list">@foreach (var pending in Sync.Pending)
         {
             <li class="list-item operation-row pending-row" @key="pending.ClientId"><div><p class="list-title">@pending.Body.Name · @pending.Body.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(pending.Body.TransactionType) · @pending.AccountName</p><p class="list-subtitle">@pending.Body.Date.ToLocalTime().ToString("dd MMM yyyy") · @pending.CategoryName @pending.ServiceName</p>@if (pending.Error is null) { <span class="badge badge-warning">Pendiente de sincronizar</span> } else { <span class="badge badge-danger">No se pudo sincronizar</span><p class="list-note">@pending.Error</p> }</div><div class="operation-actions">@if (_discard == pending.ClientId) { <button class="btn btn-danger" type="button" @onclick="() => DiscardAsync(pending.ClientId)">Confirmar</button><button class="btn btn-secondary" type="button" @onclick="() => _discard = null">Cancelar</button> } else { <button class="btn btn-secondary" type="button" @onclick="() => _discard = pending.ClientId">Descartar</button> }</div></li>
@@ -96,10 +97,37 @@ else
     }
     else
     {
-        <ul class="list">@foreach (var item in _page.Items)
+        @* Agrupados por día (en la hora local), como un historial: cada día con su encabezado y lo que se
+           gastó. Las acciones (editar, eliminar) viven en el detalle, que se abre al tocar el movimiento. *@
+        @foreach (var day in _page.Items.GroupBy(x => DateOnly.FromDateTime(x.Date.ToLocalTime().DateTime)))
         {
-            <li class="list-item operation-row is-clickable" role="button" tabindex="0" title="Ver detalle" @onclick="() => OpenDetailAsync(item.Id)" @onkeydown="e => OpenDetailByKeyAsync(e, item.Id)"><div><p class="list-title">@item.Name · @item.Amount.ToString("C2")</p><p class="list-subtitle">@TypeLabel(item.TransactionType) · @item.FinanceAccountName</p><p class="list-subtitle">@item.Date.ToLocalTime().ToString("dd MMM yyyy") · @item.CategoryName @item.ServiceName</p>@if (item.TransferId is not null) { <span class="badge">Pago vinculado</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</div><div class="operation-actions" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true">@if (_planTransactions.Contains(item.Id)) { <a class="btn btn-secondary" href="planes">Ver compra a meses</a> } else { <button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => EditAsync(item.Id)">Editar</button><button class="btn btn-secondary" type="button" disabled="@(_busy || !_plansKnown)" @onclick="() => _delete = item">Eliminar</button> }</div></li>
-        }</ul>
+            var spent = day.Where(x => x.TransactionType == TransactionType.Expense).Sum(x => x.Amount);
+            var earned = day.Where(x => x.TransactionType == TransactionType.Income).Sum(x => x.Amount);
+            <section class="day-group" aria-label="@DayLabel(day.Key)">
+                <h2 class="day-header">
+                    <span>@DayLabel(day.Key)</span>
+                    <span class="day-totals">@if (earned > 0) { <span class="tx-in">+@earned.ToString("C2")</span> }@if (spent > 0) { <span>−@spent.ToString("C2")</span> }</span>
+                </h2>
+                <ul class="tx-list">
+                    @foreach (var item in day)
+                    {
+                        <li class="tx-row is-clickable" role="button" tabindex="0" title="Ver detalle" @key="item.Id"
+                            @onclick="() => OpenDetailAsync(item.Id)" @onkeydown="e => OpenDetailByKeyAsync(e, item.Id)">
+                            <Glyph Name="@(item.TransactionType == TransactionType.Payment ? "Pago" : item.CategoryName)" />
+                            <div class="tx-main">
+                                <p class="tx-name">@item.Name</p>
+                                <p class="tx-meta">@(item.TransactionType == TransactionType.Payment ? "Pago de tarjeta" : item.CategoryName)@(item.ServiceName is null ? "" : $" · {item.ServiceName}") · @AccountName(item.FinanceAccountId, item.FinanceAccountName)</p>
+                                @if (_planTransactions.Contains(item.Id) || item.AttachmentCount > 0)
+                                {
+                                    <p class="tx-tags">@if (_planTransactions.Contains(item.Id)) { <span class="badge badge-neutral">A meses</span> }@if (item.AttachmentCount > 0) { <span class="badge badge-neutral" title="Comprobantes">📎 @item.AttachmentCount</span> }</p>
+                                }
+                            </div>
+                            <span class="tx-amount @AmountClass(item.TransactionType)">@AmountText(item)</span>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
         <div class="operation-actions"><button class="btn btn-secondary" disabled="@(_busy || _pageNumber <= 1)" @onclick="() => LoadPageAsync(_pageNumber - 1)">Anterior</button><span>Página @_pageNumber de @_page.TotalPages · @_page.TotalCount movimientos</span><button class="btn btn-secondary" disabled="@(_busy || _pageNumber >= _page.TotalPages)" @onclick="() => LoadPageAsync(_pageNumber + 1)">Siguiente</button></div>
     }
 }
@@ -205,7 +233,7 @@ else
         {
             var result = await Operations.TransactionAsync(id);
             if (!result.Success || result.Data is null) { _error = result.Error; return; }
-            var item = result.Data; _detail = null; _focusPanel = true; _id = id; _linked = item.TransferId is not null; _accountName = item.FinanceAccountName; _attachments = item.Attachments;
+            var item = result.Data; _detail = null; _focusPanel = true; _id = id; _linked = item.TransferId is not null; _accountName = AccountName(item.FinanceAccountId, item.FinanceAccountName); _attachments = item.Attachments;
             _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
             if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
             if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
@@ -272,7 +300,7 @@ else
         {
             ClientId = clientId,
             Body = OperationsService.NewTransaction(_form, clientId),
-            AccountName = _accounts.FirstOrDefault(x => x.Id == _form.FinanceAccountId)?.Name ?? "",
+            AccountName = _accounts.FirstOrDefault(x => x.Id == _form.FinanceAccountId)?.Label ?? "",
             CategoryName = _categories.FirstOrDefault(x => x.Id == _form.CategoryId)?.Name,
             ServiceName = _services.FirstOrDefault(x => x.Id == _form.ServiceId)?.Name,
             QueuedAt = DateTimeOffset.UtcNow
@@ -322,5 +350,30 @@ else
         _page = result.Data ?? new();
         if (_pageNumber > 1 && _page.Items.Count == 0) { _pageNumber--; await FetchAsync(); }
     }
+    // _allAccounts incluye las archivadas, así que todo movimiento encuentra su banco.
+    private string AccountName(Guid id, string fallback) => _allAccounts.FirstOrDefault(a => a.Id == id)?.Label ?? fallback;
+
+    private static string DayLabel(DateOnly day)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var name = day == today ? "Hoy" : day == today.AddDays(-1) ? "Ayer" : day.ToString(day.Year == today.Year ? "dddd d 'de' MMMM" : "dddd d 'de' MMMM yyyy");
+        return char.ToUpper(name[0]) + name[1..];
+    }
+
+    private static string? AmountClass(TransactionType type) => type switch
+    {
+        TransactionType.Income => "tx-in",
+        TransactionType.Payment => "tx-transfer",
+        _ => null
+    };
+
+    // Ingreso con +, gasto con −; un pago solo mueve dinero entre cuentas y va sin signo.
+    private static string AmountText(TransactionDto item) => item.TransactionType switch
+    {
+        TransactionType.Income => "+" + item.Amount.ToString("C2"),
+        TransactionType.Expense => "−" + item.Amount.ToString("C2"),
+        _ => item.Amount.ToString("C2")
+    };
+
     private static string TypeLabel(TransactionType type) => type switch { TransactionType.Income => "Ingreso", TransactionType.Payment => "Pago de tarjeta", _ => "Gasto" };
 }

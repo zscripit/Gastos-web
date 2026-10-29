@@ -19,7 +19,7 @@ else
                 <label class="field"><span class="field-label">Descripción</span><InputTextAreaLive class="input" @bind-Value="_form.Description" /></label>
                 <div class="field-row"><label class="field"><span class="field-label">Precio sin intereses</span><InputNumberLive class="input" @bind-Value="_form.Amount" step="0.01" @bind-Value:after="ScheduleChanged" /></label><label class="field"><span class="field-label">Interés total (%)</span><InputNumberLive class="input" @bind-Value="_form.Interest" step="0.01" @bind-Value:after="ScheduleChanged" /></label></div>
                 <div class="field-row"><label class="field"><span class="field-label">Meses (2 a 48)</span><InputNumberLive class="input" @bind-Value="_form.Months" @bind-Value:after="ScheduleChanged" /></label><label class="field"><span class="field-label">Fecha de compra</span><InputDateLive class="input" @bind-Value="_form.Date" @bind-Value:after="ScheduleChanged" /></label></div>
-                <label class="field"><span class="field-label">Tarjeta</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId" @bind-Value:after="ScheduleChanged"><option value="">Selecciona…</option>@foreach (var account in _accounts.Where(x => x.IsCredit)) { <option value="@account.Id">@account.Name</option> }</InputSelect></label>
+                <label class="field"><span class="field-label">Tarjeta</span><InputSelect class="input" @bind-Value="_form.FinanceAccountId" @bind-Value:after="ScheduleChanged"><option value="">Selecciona…</option>@foreach (var account in _accounts.Where(x => x.IsCredit)) { <option value="@account.Id">@account.Label</option> }</InputSelect></label>
                 <label class="field"><span class="field-label">Categoría</span><InputSelect class="input" @bind-Value="_form.CategoryId"><option value="">Selecciona…</option>@foreach (var category in _categories) { <option value="@category.Id">@category.Name</option> }</InputSelect></label>
                 <label class="field"><span class="field-label">Primera cuota (opcional)</span><InputDateLive class="input" @bind-Value="_form.FirstInstallmentDate" @bind-Value:after="ScheduleChanged" /><span class="field-hint">Déjala vacía para usar el primer corte después de la compra.</span></label>
                 <p class="field-hint">Usa interés 0 para MSI. La compra completa se registra como deuda; las cuotas indican lo que se cobra cada mes.</p>
@@ -41,7 +41,7 @@ else
     }
     @if (_selected is not null)
     {
-        <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@_selected.FinanceAccountName · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest.ToString("0.##")%</p>
+        <section class="section card operation-form"><h2 class="section-title">@_selected.Name</h2><p>@AccountName(_selected.FinanceAccountId, _selected.FinanceAccountName) · @_selected.CategoryName</p><p>@_selected.Description</p><p>Total @_selected.Total.ToString("C2") · @_selected.Months meses · Interés @_selected.Interest.ToString("0.##")%</p>
             @if (_selected.SettledOn is DateOnly settled) { <p>Liquidada el @settled.ToString("dd MMM yyyy")</p> }
             <ul class="list">@foreach (var installment in _selected.Installments) { <li class="list-item">@if (installment.Charged)
                 {
@@ -79,7 +79,7 @@ else
     {
         <ul class="list">@foreach (var item in _items)
         {
-            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Total.ToString("C2")</p><p class="list-subtitle">@item.FinanceAccountName · @item.InstallmentsCharged de @item.Months cuotas cobradas</p><p class="list-subtitle">Por cobrar @item.RemainingAmount.ToString("C2") · Próxima @item.NextInstallmentDate?.ToString("dd MMM yyyy")</p><progress value="@item.InstallmentsCharged" max="@item.Months" aria-label="Cuotas cobradas"></progress>@if (item.SettledOn is not null) { <span class="badge">Liquidada</span> }</div><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => DetailAsync(item.Id)">Ver cuotas</button></li>
+            <li class="list-item operation-row"><div><p class="list-title">@item.Name · @item.Total.ToString("C2")</p><p class="list-subtitle">@AccountName(item.FinanceAccountId, item.FinanceAccountName) · @item.InstallmentsCharged de @item.Months cuotas cobradas</p><p class="list-subtitle">Por cobrar @item.RemainingAmount.ToString("C2") · Próxima @item.NextInstallmentDate?.ToString("dd MMM yyyy")</p><progress value="@item.InstallmentsCharged" max="@item.Months" aria-label="Cuotas cobradas"></progress>@if (item.SettledOn is not null) { <span class="badge">Liquidada</span> }</div><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => DetailAsync(item.Id)">Ver cuotas</button></li>
         }</ul>
     }
 }
@@ -105,6 +105,8 @@ else
     private List<ScheduleItemDto> _schedule = [];
     private CancellationTokenSource? _scheduleCts;
     private bool AllPaid => _form is not null && _schedule.Where(x => x.Charged).All(x => _form.PaidInstallments.Contains(x.Number));
+    // Las tarjetas archivadas no vienen en _accounts: se muestra solo su nombre.
+    private string AccountName(Guid id, string fallback) => _accounts.FirstOrDefault(a => a.Id == id)?.Label ?? fallback;
     private void New() { _form = new(); _schedule = []; Close(); _error = null; }
 
     // El calendario lo calcula la API (mismo cálculo que al guardar). Se pide un momento después

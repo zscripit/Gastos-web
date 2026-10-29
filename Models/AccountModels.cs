@@ -11,6 +11,15 @@ public sealed class FinanceAccountListItem
     public string BankName { get; set; } = string.Empty;
     public string? BankIconUrl { get; set; }
     public bool IsArchived { get; set; }
+
+    /// <summary>"Nombre · Banco": distingue dos cuentas con el mismo nombre en bancos distintos.</summary>
+    public string Label => AccountLabel.For(Name, BankName);
+}
+
+public static class AccountLabel
+{
+    public static string For(string name, string? bankName) =>
+        string.IsNullOrWhiteSpace(bankName) ? name : $"{name} · {bankName}";
 }
 
 /// <summary>
@@ -35,6 +44,9 @@ public sealed class ActiveAccountDto
     public AccountType AccountType { get; set; }
 
     public bool IsCredit => AccountType == AccountType.Credit;
+
+    /// <summary>"Nombre · Banco": distingue dos cuentas con el mismo nombre en bancos distintos.</summary>
+    public string Label => AccountLabel.For(Name, BankName);
 
     /// <summary>Días que faltan para la fecha de pago; negativo si ya pasó.</summary>
     public int? DaysUntilPayment => PayDate is null
