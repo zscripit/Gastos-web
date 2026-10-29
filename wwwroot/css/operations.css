@@ -161,3 +161,19 @@ progress { max-width: 100%; accent-color: var(--accent, #7c6cff); }
 .sparkbars > span { flex: 1 1 0; min-height: 2px; background: var(--text-subtle); opacity: .45; border-radius: 2px 2px 0 0; }
 .sparkbars > span.is-current { opacity: 1; }
 .sparkbars > span.is-current { background: var(--accent); }
+
+/* --- Movimientos agrupados por día --- */
+.day-group { margin-bottom: 1.1rem; }
+.day-header { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin: 0 0 .4rem; padding: 0 .2rem; font-size: .78rem; font-weight: 600; color: var(--text-subtle); }
+.day-totals { display: flex; gap: .6rem; font-feature-settings: "tnum" 1; }
+.tx-list { list-style: none; margin: 0; padding: 0; border: var(--hairline) solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.tx-row { display: flex; align-items: center; gap: .75rem; padding: .7rem .85rem; border-bottom: var(--hairline) solid var(--border); }
+.tx-row:last-child { border-bottom: 0; }
+.tx-row.is-clickable:hover { background: var(--surface-hover); }
+.tx-main { flex: 1 1 auto; min-width: 0; }
+.tx-name { font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-meta { font-size: .78rem; color: var(--text-subtle); overflow-wrap: anywhere; }
+.tx-tags { display: flex; gap: .3rem; margin-top: .25rem; }
+.tx-amount { flex-shrink: 0; font-weight: 600; font-feature-settings: "tnum" 1; white-space: nowrap; }
+.tx-in { color: var(--accent); }
+.tx-transfer { color: var(--text-muted); }
