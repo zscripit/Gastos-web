@@ -177,3 +177,6 @@ progress { max-width: 100%; accent-color: var(--accent, #7c6cff); }
 .tx-amount { flex-shrink: 0; font-weight: 600; font-feature-settings: "tnum" 1; white-space: nowrap; }
 .tx-in { color: var(--accent); }
 .tx-transfer { color: var(--text-muted); }
+
+.list-item.catalog-editing { display: block; grid-column: 1 / -1; }
+.catalog-edit-form { width: 100%; }

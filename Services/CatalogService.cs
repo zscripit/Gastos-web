@@ -46,6 +46,18 @@ public sealed class CatalogService(ApiClient api)
             : ApiResult<Guid>.Fail(result.Error ?? "No se recibió el catálogo creado.", result.StatusCode, result.ValidationErrors);
     }
 
+    public async Task<ApiResult<CatalogItemDto>> UpdateAsync(CatalogKind kind, Guid id, SaveCatalogItemRequest request)
+    {
+        var result = await api.PutAsync<CatalogItemDto>($"/api/{Segment(kind)}/{id}", new
+        {
+            name = request.Name.Trim(),
+            iconUrl = string.IsNullOrWhiteSpace(request.IconUrl) ? null : request.IconUrl.Trim()
+        });
+
+        if (result.Success) Invalidate(kind);
+        return result;
+    }
+
     public async Task<ApiResult<bool>> ChangeStatusAsync(CatalogKind kind, Guid id, bool isArchived)
     {
         var result = await api.PatchAsync<bool>($"/api/{Segment(kind)}/{id}/Status",
