@@ -99,7 +99,35 @@ else
         <ul class="list">
             @foreach (var item in Visible)
             {
-                <li class="list-item @(item.IsArchived ? "is-archived" : null)" @key="item.Id">
+                <li class="list-item @(_editingId == item.Id ? "catalog-editing" : item.IsArchived ? "is-archived" : null)" @key="item.Id">
+                @if (_editingId == item.Id)
+                {
+                        <EditForm Model="_editModel" OnValidSubmit="() => SaveEditAsync(item)" FormName="@($"edit-{Kind}")" class="catalog-edit-form">
+                            <DataAnnotationsValidator />
+                            <Alert Message="@_editError" />
+                            <div class="catalog-form-head">
+                                <Glyph Name="@_editModel.Name" IconUrl="@_editModel.IconUrl" CssClass="glyph-lg" />
+                                <div class="catalog-form-fields">
+                                    <label class="field">
+                                        <span class="field-label">Nombre</span>
+                                        <InputTextLive @bind-Value="_editModel.Name" class="input" maxlength="@NameMaxLength" />
+                                        <ValidationMessage For="() => _editModel.Name" />
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="field">
+                                <span class="field-label">URL del logotipo <span class="field-hint">(opcional; vacía para quitarlo)</span></span>
+                                <InputTextLive @bind-Value="_editModel.IconUrl" class="input" type="url" inputmode="url" placeholder="https://…" />
+                                <ValidationMessage For="() => _editModel.IconUrl" />
+                            </label>
+                            <div class="operation-actions">
+                                <button class="btn btn-primary btn-sm" type="submit" disabled="@_editBusy">@(_editBusy ? "Guardando…" : "Guardar")</button>
+                                <button class="btn btn-secondary btn-sm" type="button" disabled="@_editBusy" @onclick="CancelEdit">Cancelar</button>
+                            </div>
+                        </EditForm>
+                }
+                else
+                {
                     <div class="list-lead">
                         <Glyph Name="@item.Name" IconUrl="@item.IconUrl" />
                         <div>
@@ -112,12 +140,14 @@ else
                         {
                             <span class="badge badge-neutral">Archivado</span>
                         }
+                        <button class="btn btn-ghost btn-sm" type="button" @onclick="() => StartEdit(item)">Editar</button>
                         <button class="btn btn-ghost btn-sm" type="button"
                                 disabled="@(_togglingId == item.Id)"
                                 @onclick="() => ToggleAsync(item)">
                             @(item.IsArchived ? "Reactivar" : "Archivar")
                         </button>
                     </div>
+                }
                 </li>
             }
         </ul>
@@ -151,6 +181,10 @@ else
     private bool _busy;
     private bool _showForm;
     private Guid? _togglingId;
+    private Guid? _editingId;
+    private SaveCatalogItemRequest _editModel = new();
+    private bool _editBusy;
+    private string? _editError;
     private string? _error;
     private string? _formError;
     private string? _notice;
@@ -219,6 +253,44 @@ else
         _filter = Filter.Active;
         _notice = $"“{name}” se agregó al catálogo.";
         await ReloadAsync();
+    }
+
+    // Se edita en el mismo renglón: la lista puede ser larga y así no hay que volver al inicio.
+    private void StartEdit(CatalogItemDto item)
+    {
+        _editingId = item.Id;
+        _editModel = new SaveCatalogItemRequest { Name = item.Name, IconUrl = item.IconUrl };
+        _editError = null;
+        _notice = null;
+    }
+
+    private void CancelEdit() { _editingId = null; _editError = null; }
+
+    private async Task SaveEditAsync(CatalogItemDto item)
+    {
+        _editBusy = true;
+        _editError = null;
+
+        var name = _editModel.Name.Trim();
+        var result = await Catalog.UpdateAsync(Kind, item.Id, _editModel);
+
+        _editBusy = false;
+
+        if (!result.Success || result.Data is null)
+        {
+            _editError = result.StatusCode == 409
+                ? $"Ya existe otro {Singular} llamado “{name}”."
+                : result.ValidationErrors.Count > 0
+                    ? string.Join(" ", result.ValidationErrors.SelectMany(e => e.Value))
+                    : result.Error;
+            return;
+        }
+
+        item.Name = result.Data.Name;
+        item.IconUrl = result.Data.IconUrl;
+        _editingId = null;
+        _items = _items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+        _notice = $"“{item.Name}” se actualizó.";
     }
 
     private async Task ToggleAsync(CatalogItemDto item)
