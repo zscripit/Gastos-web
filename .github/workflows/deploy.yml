@@ -29,6 +29,10 @@ jobs:
       - name: Publish
         run: dotnet publish GastosApp.Web.csproj -c Release -o out
 
+      # Completa la Content-Security-Policy de _headers con el hash del importmap que generó la publicación.
+      - name: Apply CSP
+        run: node build/apply-csp.mjs out/wwwroot
+
       # Usa wrangler.jsonc: sube out/wwwroot como static assets del Worker.
       # La action instala Wrangler 3 por defecto, que no acepta Workers sin `main`.
       - name: Deploy to Cloudflare
