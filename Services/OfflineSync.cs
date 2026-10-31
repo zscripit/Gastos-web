@@ -118,8 +118,9 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
                     continue;
                 }
 
-                // Sin red o sin sesión: se deja todo como está y se reintenta después.
-                if (result.StatusCode is 0 or 401)
+                // Sin red, sin sesión o con el límite de peticiones alcanzado (429): se deja todo como
+                // está y se reintenta después; no es un error del movimiento.
+                if (result.StatusCode is 0 or 401 or 429)
                 {
                     if (result.StatusCode == 0) IsOnline = false;
                     break;

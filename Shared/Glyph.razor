@@ -10,7 +10,10 @@
    dispara el error antes de que haya quien lo escuche. Los atributos nativos
    existen desde que se crea el <img>, así que no hay carrera. onload deshace
    el respaldo para que la vista previa del formulario se recupere cuando la
-   URL que se va escribiendo por fin sea válida. *@
+   URL que se va escribiendo por fin sea válida.
+
+   La Content-Security-Policy (wwwroot/_headers) permite estos dos atributos por su hash: si se cambia
+   su texto, hay que recalcular los hashes ahí. *@
 
 <span class="glyph @CssClass">
     @if (HasUrl)

@@ -145,6 +145,15 @@ devuelve `index.html` para que Blazor la resuelva al recargar.
 | `.github/workflows/ci.yml` | PR hacia `main` o `develop` | `dotnet publish` en Release; no despliega ni corre `ContractTests` |
 | `.github/workflows/deploy.yml` | Push a `main` (o manual) | Publica en Release y despliega con Wrangler 4 |
 
+### Content-Security-Policy
+
+`wwwroot/_headers` define los encabezados de seguridad que Cloudflare agrega a cada archivo, entre ellos una
+CSP que solo permite scripts propios, la API y R2. El importmap en línea de `index.html` lo genera .NET en
+cada publicación, así que `build/apply-csp.mjs` calcula su hash y lo inserta en `_headers` después de
+`dotnet publish` (los workflows de CI y deploy lo ejecutan). Si se agrega otro origen (otra API, otro
+storage), hay que sumarlo a `connect-src`; si cambian los `onerror`/`onload` de `Shared/Glyph.razor`, hay
+que recalcular sus hashes.
+
 El despliegue necesita los secrets `CLOUDFLARE_API_TOKEN` y
 `CLOUDFLARE_ACCOUNT_ID` en el repositorio. Como se publica fuera de
 Development, la app desplegada usa `appsettings.Production.json`; el origen

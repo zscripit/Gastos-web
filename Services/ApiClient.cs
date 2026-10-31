@@ -151,6 +151,7 @@ public sealed class ApiClient(HttpClient http, SessionRefresher? refresher = nul
         HttpStatusCode.NotFound => "No se encontró el recurso solicitado.",
         HttpStatusCode.Conflict => "El registro ya existe.",
         HttpStatusCode.Locked => "La cuenta está bloqueada temporalmente.",
+        HttpStatusCode.TooManyRequests => "Demasiadas solicitudes seguidas. Espera un momento e inténtalo de nuevo.",
         _ => "Ocurrió un error inesperado."
     };
 }

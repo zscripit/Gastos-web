@@ -1,0 +1,16 @@
+# Encabezados que Cloudflare agrega a cada archivo servido por el Worker (static assets).
+# El marcador del hash en script-src lo reemplaza build/apply-csp.mjs después de `dotnet publish`: el importmap en línea de
+# index.html lo genera .NET con los nombres con huella de cada build, así que su hash cambia en cada publicación.
+#
+# - script-src: solo archivos propios, el importmap por hash y 'wasm-unsafe-eval' (lo exige el runtime de .NET en WebAssembly).
+# - 'unsafe-hashes' + dos hashes: solo los onerror/onload de Shared/Glyph.razor (respaldo con iniciales del logotipo).
+#   Si cambia el texto de esos atributos, hay que recalcular sus hashes.
+# - style-src 'unsafe-inline': Blazor pone estilos en atributos style (barras de las gráficas, anchos); Google Fonts.
+# - connect-src: la API y las URLs prefirmadas de R2 (subir, ver y descargar comprobantes).
+# - img-src https:: logotipos de bancos y proveedores (bucket público) y fotos de comprobantes en R2.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' __IMPORTMAP_HASH__ 'unsafe-hashes' 'sha256-YDkayWtV0iyRqW9hvCcTct+XUMZhgDJEMZU4eo4AenQ=' 'sha256-l4VRdOIwgwGnKbPttz55St8zu2x6/1a9dWjMOQXomrk='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://gastos-api.delightfulcoast-aa20ff36.eastus2.azurecontainerapps.io https://*.r2.cloudflarestorage.com; worker-src 'self' blob:; manifest-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), payment=(), usb=()
