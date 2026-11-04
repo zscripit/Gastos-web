@@ -23,7 +23,7 @@ public sealed class OperationsService(ApiClient api)
     public Task<ApiResult<TransactionDto>> TransactionAsync(Guid id) => api.GetAsync<TransactionDto>($"/api/Transaction/{id}");
     public Task<ApiResult<TransactionDto>> SaveTransactionAsync(TransactionForm form, Guid? id, Guid? clientId = null)
     {
-        var categoryId = form.TransactionType == TransactionType.Payment ? null : form.CategoryId;
+        var categoryId = form.TransactionType.IsMovement() ? null : form.CategoryId;
         var serviceId = form.TransactionType == TransactionType.Expense ? form.ServiceId : null;
         return id is null
             ? api.PostAsync<TransactionDto>("/api/Transaction", NewTransaction(form, clientId))
@@ -34,9 +34,9 @@ public sealed class OperationsService(ApiClient api)
     /// <summary>Body del alta. Es el mismo que se guarda en la cola cuando no hay conexión.</summary>
     public static NewTransactionBody NewTransaction(TransactionForm form, Guid? clientId) => new(
         form.Name, form.Description, form.Amount, Offset(form.Date), form.TransactionType, form.FinanceAccountId,
-        form.TransactionType == TransactionType.Payment ? null : form.CategoryId,
+        form.TransactionType.IsMovement() ? null : form.CategoryId,
         form.TransactionType == TransactionType.Expense ? form.ServiceId : null,
-        form.TransactionType == TransactionType.Payment ? form.SourceAccountId : null,
+        form.TransactionType.IsMovement() ? form.SourceAccountId : null,
         clientId);
     public Task<ApiResult<List<Guid>>> DeleteTransactionAsync(Guid id) => api.DeleteAsync<List<Guid>>($"/api/Transaction/{id}");
     public Task<ApiResult<List<FinancePlanDto>>> PlansAsync(FinancePlanStatus status = FinancePlanStatus.All) =>
