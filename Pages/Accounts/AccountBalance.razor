@@ -15,6 +15,11 @@ else if (_balance is not null)
             <div><dt>Ingresos</dt><dd>@_balance.TotalIncome.ToString("C2")</dd></div>
             <div><dt>Gastos</dt><dd>@_balance.TotalExpense.ToString("C2")</dd></div>
             <div><dt>Pagos</dt><dd>@_balance.TotalPayments.ToString("C2")</dd></div>
+            @if (_balance.TotalTransfersIn > 0 || _balance.TotalTransfersOut > 0)
+            {
+                <div><dt>Transferencias recibidas</dt><dd>@_balance.TotalTransfersIn.ToString("C2")</dd></div>
+                <div><dt>Transferencias enviadas</dt><dd>@_balance.TotalTransfersOut.ToString("C2")</dd></div>
+            }
             @if (_balance.AccountType == AccountType.Credit)
             {
                 <div><dt>Deuda</dt><dd>@_balance.Debt?.ToString("C2")</dd></div>

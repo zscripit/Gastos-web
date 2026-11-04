@@ -2,7 +2,22 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GastosApp.Web.Models;
 
-public enum TransactionType { Income = 1, Expense = 2, Payment = 3 }
+public enum TransactionType { Income = 1, Expense = 2, Payment = 3, TransferIn = 4, TransferOut = 5 }
+
+public static class TransactionTypes
+{
+    /// <summary>Movimientos que solo pasan dinero entre cuentas propias: no son ingreso ni gasto.</summary>
+    public static bool IsTransfer(this TransactionType type) => type is TransactionType.TransferIn or TransactionType.TransferOut;
+
+    /// <summary>Usan una categoría de sistema y tienen cuenta de origen: pagos de tarjeta y transferencias.</summary>
+    public static bool IsMovement(this TransactionType type) => type is TransactionType.Payment || type.IsTransfer();
+}
+
+/// <summary>Categorías que la API usa sola (pagos y transferencias); no se ofrecen al registrar un gasto o ingreso.</summary>
+public static class SystemCategories
+{
+    public static bool Contains(string name) => name is "Pago de tarjeta" or "Transferencia";
+}
 public enum FinancePlanStatus { Active = 1, Finished = 2, All = 3 }
 public enum ServiceType
 {
@@ -131,6 +146,8 @@ public sealed class AccountBalanceDto
     public decimal TotalIncome { get; set; }
     public decimal TotalExpense { get; set; }
     public decimal TotalPayments { get; set; }
+    public decimal TotalTransfersIn { get; set; }
+    public decimal TotalTransfersOut { get; set; }
     public decimal Balance { get; set; }
     public decimal? CreditLimit { get; set; }
     public decimal? Debt { get; set; }
