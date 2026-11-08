@@ -5,7 +5,13 @@ self.importScripts('./service-worker-assets.js');
 self.importScripts('./js/push-sw.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
-self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+// Solo se atienden peticiones del propio sitio. Las de otros orígenes (logotipos en el bucket público de R2,
+// comprobantes, la API) las hace el navegador directamente: si pasaran por fetch() del service worker quedarían
+// sujetas a connect-src de la CSP, que no incluye el bucket público, y las imágenes fallarían.
+self.addEventListener('fetch', event => {
+    if (new URL(event.request.url).origin !== self.location.origin) return;
+    event.respondWith(onFetch(event));
+});
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
@@ -26,6 +32,10 @@ async function onInstall(event) {
         .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
         .map(asset => new Request(asset.url, { integrity: asset.hash, cache: 'no-cache' }));
     await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
+
+    // No esperar a que se cierren todas las ventanas: la PWA instalada casi nunca se cierra del todo y la
+    // versión nueva quedaría en espera indefinidamente. js/register-sw.js recarga la página al cambiar.
+    self.skipWaiting();
 }
 
 async function onActivate(event) {
@@ -36,6 +46,9 @@ async function onActivate(event) {
     await Promise.all(cacheKeys
         .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
         .map(key => caches.delete(key)));
+
+    // Tomar el control de las páginas abiertas para que dejen de usar la caché anterior.
+    await self.clients.claim();
 }
 
 async function onFetch(event) {

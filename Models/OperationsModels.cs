@@ -37,6 +37,7 @@ public sealed class ServiceDto
     public ServiceType ServiceType { get; set; }
     public Guid ProviderId { get; set; }
     public string ProviderName { get; set; } = "";
+    public string? ProviderIconUrl { get; set; }
 }
 public sealed class ServiceForm
 {

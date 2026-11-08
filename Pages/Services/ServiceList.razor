@@ -41,7 +41,7 @@ else
     {
         <ul class="list">@foreach (var item in Visible)
         {
-            <li class="list-item"><div><p class="list-title">@item.Name @if (item.IsArchived) { <span class="badge">Archivado</span> }</p><p class="list-subtitle">@item.ProviderName · @Label(item.ServiceType)</p><p class="list-subtitle">@item.Description</p></div><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => Edit(item)">Editar</button></li>
+            <li class="list-item"><div class="list-lead"><Glyph Name="@item.ProviderName" IconUrl="@item.ProviderIconUrl" /><div><p class="list-title">@item.Name @if (item.IsArchived) { <span class="badge">Archivado</span> }</p><p class="list-subtitle">@item.ProviderName · @Label(item.ServiceType)</p><p class="list-subtitle">@item.Description</p></div></div><button class="btn btn-secondary" type="button" disabled="@_busy" @onclick="() => Edit(item)">Editar</button></li>
         }</ul>
     }
 }
