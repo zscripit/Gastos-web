@@ -1,0 +1,38 @@
+Summary
+  Generated on: 10/11/2026 - 05:29:01 p. m.
+  Coverage date: 10/11/2026 - 05:28:59 p. m.
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 16
+  Files: 13
+  Line coverage: 52.9%
+  Covered lines: 189
+  Uncovered lines: 168
+  Coverable lines: 357
+  Total lines: 1114
+  Branch coverage: 49.3% (112 of 227)
+  Covered branches: 112
+  Total branches: 227
+  Method coverage: 42% (37 of 88)
+  Full method coverage: 34% (30 of 88)
+  Covered methods: 37
+  Fully covered methods: 30
+  Total methods: 88
+
+ClientUnderTest                                 52.9%
+  GastosApp.Web.Models.AccountLabel                0%
+  GastosApp.Web.Models.AccountTypeExtensions       0%
+  GastosApp.Web.Models.ActiveAccountDto            0%
+  GastosApp.Web.Models.ApiResult<T>              100%
+  GastosApp.Web.Models.AttachmentRules          53.8%
+  GastosApp.Web.Models.AuthSession               100%
+  GastosApp.Web.Models.FinanceAccountListItem      0%
+  GastosApp.Web.Models.NewTransactionBody        100%
+  GastosApp.Web.Models.SystemCategories            0%
+  GastosApp.Web.Models.TransactionTypes          100%
+  GastosApp.Web.Services.ApiClient              89.5%
+  GastosApp.Web.Services.LocalStorageService      50%
+  GastosApp.Web.Services.OfflineStore              0%
+  GastosApp.Web.Services.OperationsService      15.9%
+  GastosApp.Web.Services.SessionRefresher       71.4%
+  GastosApp.Web.Services.TokenStore             66.6%

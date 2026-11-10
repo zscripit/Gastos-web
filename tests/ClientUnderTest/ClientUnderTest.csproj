@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Archivos fuente del cliente (GastosApp.Web) compilados para el runtime de escritorio, sin el proyecto
+    Blazor WebAssembly. Lo usan las pruebas unitarias white box; no se publica.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>GastosApp.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Models/ApiResponse.cs" Link="Source/ApiResponse.cs" />
+    <Compile Include="../../Models/AttachmentModels.cs" Link="Source/AttachmentModels.cs" />
+    <Compile Include="../../Models/AuthModels.cs" Link="Source/AuthModels.cs" />
+    <Compile Include="../../Models/Enums.cs" Link="Source/Enums.cs" />
+    <Compile Include="../../Models/OfflineModels.cs" Link="Source/OfflineModels.cs" />
+    <Compile Include="../../Models/OperationsModels.cs" Link="Source/OperationsModels.cs" />
+    <Compile Include="../../Models/AccountModels.cs" Link="Source/AccountModels.cs" />
+    <Compile Include="../../Services/ApiClient.cs" Link="Source/ApiClient.cs" />
+    <Compile Include="../../Services/LocalStorageService.cs" Link="Source/LocalStorageService.cs" />
+    <Compile Include="../../Services/OfflineStore.cs" Link="Source/OfflineStore.cs" />
+    <Compile Include="../../Services/OperationsService.cs" Link="Source/OperationsService.cs" />
+    <Compile Include="../../Services/SessionRefresher.cs" Link="Source/SessionRefresher.cs" />
+    <Compile Include="../../Services/TokenStore.cs" Link="Source/TokenStore.cs" />
+  </ItemGroup>
+
+</Project>

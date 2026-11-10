@@ -1,0 +1,1920 @@
+<?xml version="1.0" encoding="utf-8"?>
+<coverage line-rate="0.5294" branch-rate="0.49329999999999996" version="1.9" timestamp="1794353339" lines-covered="189" lines-valid="357" branches-covered="112" branches-valid="227">
+  <sources>
+    <source>C:/gastos_project/GastosApp.Web/</source>
+  </sources>
+  <packages>
+    <package name="ClientUnderTest" line-rate="0.5294" branch-rate="0.49329999999999996" complexity="275">
+      <classes>
+        <class name="GastosApp.Web.Services.ApiClient" filename="Services/ApiClient.cs" line-rate="1" branch-rate="1" complexity="26">
+          <methods>
+            <method name="add_Unauthorized" signature="(System.Func`1&lt;System.Threading.Tasks.Task&gt;)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="28" hits="1" branch="False" />
+              </lines>
+            </method>
+            <method name="remove_Unauthorized" signature="(System.Func`1&lt;System.Threading.Tasks.Task&gt;)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="29" hits="1" branch="False" />
+              </lines>
+            </method>
+            <method name="GetAsync" signature="(System.String)" line-rate="1" branch-rate="1" complexity="2">
+              <lines>
+                <line number="35" hits="16" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="48" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="36" hits="16" branch="False" />
+              </lines>
+            </method>
+            <method name="PostAsync" signature="(System.String,System.Object)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="39" hits="6" branch="False" />
+              </lines>
+            </method>
+            <method name="PutAsync" signature="(System.String,System.Object)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="42" hits="1" branch="False" />
+              </lines>
+            </method>
+            <method name="PatchAsync" signature="(System.String,System.Object)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="45" hits="1" branch="False" />
+              </lines>
+            </method>
+            <method name="DeleteAsync" signature="(System.String)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="48" hits="1" branch="False" />
+              </lines>
+            </method>
+            <method name="Build" signature="(System.Net.Http.HttpMethod,System.String,System.Object)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="51" hits="8" branch="False" />
+              </lines>
+            </method>
+            <method name="Parse" signature="(System.String)" line-rate="1" branch-rate="1" complexity="2">
+              <lines>
+                <line number="134" hits="21" branch="False" />
+                <line number="135" hits="33" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="9" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="138" hits="9" branch="False" />
+                <line number="139" hits="9" branch="False" />
+                <line number="141" hits="1" branch="False" />
+                <line number="142" hits="1" branch="False" />
+                <line number="143" hits="1" branch="False" />
+                <line number="145" hits="21" branch="False" />
+              </lines>
+            </method>
+            <method name="DefaultMessage" signature="(System.Net.HttpStatusCode)" line-rate="1" branch-rate="1" complexity="13">
+              <lines>
+                <line number="147" hits="9" branch="True" condition-coverage="100% (13/13)">
+                  <conditions>
+                    <condition number="10" type="jump" coverage="100%" />
+                    <condition number="19" type="switch" coverage="100%" />
+                    <condition number="58" type="jump" coverage="100%" />
+                    <condition number="48" type="jump" coverage="100%" />
+                    <condition number="68" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="148" hits="9" branch="False" />
+                <line number="149" hits="2" branch="False" />
+                <line number="150" hits="1" branch="False" />
+                <line number="151" hits="1" branch="False" />
+                <line number="152" hits="1" branch="False" />
+                <line number="153" hits="1" branch="False" />
+                <line number="154" hits="1" branch="False" />
+                <line number="155" hits="2" branch="False" />
+                <line number="156" hits="9" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(System.Net.Http.HttpClient,GastosApp.Web.Services.SessionRefresher,GastosApp.Web.Services.OfflineStore)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="13" hits="24" branch="False" />
+              </lines>
+            </method>
+            <method name=".cctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="15" hits="1" branch="False" />
+                <line number="18" hits="1" branch="False" />
+                <line number="19" hits="1" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="28" hits="1" branch="False" />
+            <line number="29" hits="1" branch="False" />
+            <line number="35" hits="16" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="48" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="36" hits="16" branch="False" />
+            <line number="39" hits="6" branch="False" />
+            <line number="42" hits="1" branch="False" />
+            <line number="45" hits="1" branch="False" />
+            <line number="48" hits="1" branch="False" />
+            <line number="51" hits="8" branch="False" />
+            <line number="134" hits="21" branch="False" />
+            <line number="135" hits="33" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="9" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="138" hits="9" branch="False" />
+            <line number="139" hits="9" branch="False" />
+            <line number="141" hits="1" branch="False" />
+            <line number="142" hits="1" branch="False" />
+            <line number="143" hits="1" branch="False" />
+            <line number="145" hits="21" branch="False" />
+            <line number="147" hits="9" branch="True" condition-coverage="100% (13/13)">
+              <conditions>
+                <condition number="10" type="jump" coverage="100%" />
+                <condition number="19" type="switch" coverage="100%" />
+                <condition number="58" type="jump" coverage="100%" />
+                <condition number="48" type="jump" coverage="100%" />
+                <condition number="68" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="148" hits="9" branch="False" />
+            <line number="149" hits="2" branch="False" />
+            <line number="150" hits="1" branch="False" />
+            <line number="151" hits="1" branch="False" />
+            <line number="152" hits="1" branch="False" />
+            <line number="153" hits="1" branch="False" />
+            <line number="154" hits="1" branch="False" />
+            <line number="155" hits="2" branch="False" />
+            <line number="156" hits="9" branch="False" />
+            <line number="13" hits="24" branch="False" />
+            <line number="15" hits="1" branch="False" />
+            <line number="18" hits="1" branch="False" />
+            <line number="19" hits="1" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.ApiClient/&lt;CachedAsync&gt;d__18`1" filename="Services/ApiClient.cs" line-rate="0" branch-rate="0" complexity="6">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="6">
+              <lines>
+                <line number="128" hits="0" branch="False" />
+                <line number="129" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="53" type="jump" coverage="0%" />
+                    <condition number="218" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="130" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="247" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="131" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="128" hits="0" branch="False" />
+            <line number="129" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="53" type="jump" coverage="0%" />
+                <condition number="218" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="130" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="247" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="131" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.ApiClient/&lt;FromCacheAsync&gt;d__17`1" filename="Services/ApiClient.cs" line-rate="0.6" branch-rate="0.25" complexity="4">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.6" branch-rate="0.25" complexity="4">
+              <lines>
+                <line number="121" hits="4" branch="False" />
+                <line number="122" hits="8" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="34" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="123" hits="0" branch="False" />
+                <line number="124" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="66" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="125" hits="4" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="121" hits="4" branch="False" />
+            <line number="122" hits="8" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="34" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="123" hits="0" branch="False" />
+            <line number="124" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="66" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="125" hits="4" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.ApiClient/&lt;SendAsync&gt;d__16`1" filename="Services/ApiClient.cs" line-rate="0.9347" branch-rate="0.8928" complexity="56">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.9347" branch-rate="0.8928" complexity="56">
+              <lines>
+                <line number="55" hits="25" branch="False" />
+                <line number="56" hits="25" branch="True" condition-coverage="62.5% (5/8)">
+                  <conditions>
+                    <condition number="94" type="jump" coverage="100%" />
+                    <condition number="108" type="jump" coverage="50%" />
+                    <condition number="145" type="jump" coverage="50%" />
+                    <condition number="305" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="57" hits="0" branch="False" />
+                <line number="62" hits="25" branch="False" />
+                <line number="63" hits="25" branch="False" />
+                <line number="66" hits="21" branch="True" condition-coverage="100% (6/6)">
+                  <conditions>
+                    <condition number="524" type="jump" coverage="100%" />
+                    <condition number="569" type="jump" coverage="100%" />
+                    <condition number="741" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="67" hits="21" branch="False" />
+                <line number="68" hits="1" branch="False" />
+                <line number="69" hits="1" branch="False" />
+                <line number="70" hits="1" branch="False" />
+                <line number="71" hits="1" branch="False" />
+                <line number="72" hits="21" branch="False" />
+                <line number="73" hits="2" branch="False" />
+                <line number="74" hits="2" branch="False" />
+                <line number="75" hits="2" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="1098" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="77" hits="2" branch="False" />
+                <line number="78" hits="2" branch="False" />
+                <line number="79" hits="2" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="1243" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="82" hits="21" branch="False" />
+                <line number="83" hits="21" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="1300" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="85" hits="21" branch="True" condition-coverage="100% (4/4)">
+                  <conditions>
+                    <condition number="1327" type="jump" coverage="100%" />
+                    <condition number="1347" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="86" hits="1" branch="False" />
+                <line number="87" hits="1" branch="False" />
+                <line number="88" hits="1" branch="False" />
+                <line number="91" hits="63" branch="False" />
+                <line number="92" hits="0" branch="False" />
+                <line number="93" hits="0" branch="False" />
+                <line number="95" hits="21" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="1667" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="96" hits="8" branch="False" />
+                <line number="97" hits="8" branch="False" />
+                <line number="98" hits="8" branch="True" condition-coverage="100% (4/4)">
+                  <conditions>
+                    <condition number="1696" type="jump" coverage="100%" />
+                    <condition number="1726" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="99" hits="2" branch="False" />
+                <line number="100" hits="6" branch="True" condition-coverage="75% (3/4)">
+                  <conditions>
+                    <condition number="1757" type="jump" coverage="100%" />
+                    <condition number="1783" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="101" hits="6" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="1913" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="104" hits="13" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="1977" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="105" hits="3" branch="False" />
+                <line number="106" hits="3" branch="False" />
+                <line number="107" hits="3" branch="True" condition-coverage="100% (10/10)">
+                  <conditions>
+                    <condition number="2004" type="jump" coverage="100%" />
+                    <condition number="2016" type="jump" coverage="100%" />
+                    <condition number="2026" type="jump" coverage="100%" />
+                    <condition number="2038" type="jump" coverage="100%" />
+                    <condition number="2059" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="108" hits="3" branch="False" />
+                <line number="109" hits="3" branch="False" />
+                <line number="110" hits="3" branch="False" />
+                <line number="113" hits="10" branch="False" />
+                <line number="114" hits="10" branch="True" condition-coverage="87.5% (7/8)">
+                  <conditions>
+                    <condition number="2102" type="jump" coverage="100%" />
+                    <condition number="2114" type="jump" coverage="100%" />
+                    <condition number="2124" type="jump" coverage="50%" />
+                    <condition number="2136" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="115" hits="10" branch="False" />
+                <line number="116" hits="10" branch="False" />
+                <line number="117" hits="25" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="55" hits="25" branch="False" />
+            <line number="56" hits="25" branch="True" condition-coverage="62.5% (5/8)">
+              <conditions>
+                <condition number="94" type="jump" coverage="100%" />
+                <condition number="108" type="jump" coverage="50%" />
+                <condition number="145" type="jump" coverage="50%" />
+                <condition number="305" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="57" hits="0" branch="False" />
+            <line number="62" hits="25" branch="False" />
+            <line number="63" hits="25" branch="False" />
+            <line number="66" hits="21" branch="True" condition-coverage="100% (6/6)">
+              <conditions>
+                <condition number="524" type="jump" coverage="100%" />
+                <condition number="569" type="jump" coverage="100%" />
+                <condition number="741" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="67" hits="21" branch="False" />
+            <line number="68" hits="1" branch="False" />
+            <line number="69" hits="1" branch="False" />
+            <line number="70" hits="1" branch="False" />
+            <line number="71" hits="1" branch="False" />
+            <line number="72" hits="21" branch="False" />
+            <line number="73" hits="2" branch="False" />
+            <line number="74" hits="2" branch="False" />
+            <line number="75" hits="2" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="1098" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="77" hits="2" branch="False" />
+            <line number="78" hits="2" branch="False" />
+            <line number="79" hits="2" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="1243" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="82" hits="21" branch="False" />
+            <line number="83" hits="21" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="1300" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="85" hits="21" branch="True" condition-coverage="100% (4/4)">
+              <conditions>
+                <condition number="1327" type="jump" coverage="100%" />
+                <condition number="1347" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="86" hits="1" branch="False" />
+            <line number="87" hits="1" branch="False" />
+            <line number="88" hits="1" branch="False" />
+            <line number="91" hits="63" branch="False" />
+            <line number="92" hits="0" branch="False" />
+            <line number="93" hits="0" branch="False" />
+            <line number="95" hits="21" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="1667" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="96" hits="8" branch="False" />
+            <line number="97" hits="8" branch="False" />
+            <line number="98" hits="8" branch="True" condition-coverage="100% (4/4)">
+              <conditions>
+                <condition number="1696" type="jump" coverage="100%" />
+                <condition number="1726" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="99" hits="2" branch="False" />
+            <line number="100" hits="6" branch="True" condition-coverage="75% (3/4)">
+              <conditions>
+                <condition number="1757" type="jump" coverage="100%" />
+                <condition number="1783" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="101" hits="6" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="1913" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="104" hits="13" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="1977" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="105" hits="3" branch="False" />
+            <line number="106" hits="3" branch="False" />
+            <line number="107" hits="3" branch="True" condition-coverage="100% (10/10)">
+              <conditions>
+                <condition number="2004" type="jump" coverage="100%" />
+                <condition number="2016" type="jump" coverage="100%" />
+                <condition number="2026" type="jump" coverage="100%" />
+                <condition number="2038" type="jump" coverage="100%" />
+                <condition number="2059" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="108" hits="3" branch="False" />
+            <line number="109" hits="3" branch="False" />
+            <line number="110" hits="3" branch="False" />
+            <line number="113" hits="10" branch="False" />
+            <line number="114" hits="10" branch="True" condition-coverage="87.5% (7/8)">
+              <conditions>
+                <condition number="2102" type="jump" coverage="100%" />
+                <condition number="2114" type="jump" coverage="100%" />
+                <condition number="2124" type="jump" coverage="50%" />
+                <condition number="2136" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="115" hits="10" branch="False" />
+            <line number="116" hits="10" branch="False" />
+            <line number="117" hits="25" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.LocalStorageService" filename="Services/LocalStorageService.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="(Microsoft.JSInterop.IJSRuntime)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="9" hits="2" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="9" hits="2" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.LocalStorageService/&lt;GetAsync&gt;d__2" filename="Services/LocalStorageService.cs" line-rate="0.5714" branch-rate="1" complexity="1">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.5714" branch-rate="1" complexity="1">
+              <lines>
+                <line number="12" hits="4" branch="False" />
+                <line number="14" hits="4" branch="False" />
+                <line number="15" hits="4" branch="False" />
+                <line number="17" hits="0" branch="False" />
+                <line number="18" hits="0" branch="False" />
+                <line number="20" hits="0" branch="False" />
+                <line number="22" hits="4" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="12" hits="4" branch="False" />
+            <line number="14" hits="4" branch="False" />
+            <line number="15" hits="4" branch="False" />
+            <line number="17" hits="0" branch="False" />
+            <line number="18" hits="0" branch="False" />
+            <line number="20" hits="0" branch="False" />
+            <line number="22" hits="4" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.LocalStorageService/&lt;RemoveAsync&gt;d__4" filename="Services/LocalStorageService.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="34" hits="0" branch="False" />
+                <line number="36" hits="0" branch="False" />
+                <line number="37" hits="0" branch="False" />
+                <line number="38" hits="0" branch="False" />
+                <line number="39" hits="0" branch="False" />
+                <line number="40" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="34" hits="0" branch="False" />
+            <line number="36" hits="0" branch="False" />
+            <line number="37" hits="0" branch="False" />
+            <line number="38" hits="0" branch="False" />
+            <line number="39" hits="0" branch="False" />
+            <line number="40" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.LocalStorageService/&lt;SetAsync&gt;d__3" filename="Services/LocalStorageService.cs" line-rate="0.8332999999999999" branch-rate="1" complexity="1">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.8332999999999999" branch-rate="1" complexity="1">
+              <lines>
+                <line number="25" hits="2" branch="False" />
+                <line number="27" hits="2" branch="False" />
+                <line number="28" hits="2" branch="False" />
+                <line number="29" hits="2" branch="False" />
+                <line number="30" hits="0" branch="False" />
+                <line number="31" hits="2" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="25" hits="2" branch="False" />
+            <line number="27" hits="2" branch="False" />
+            <line number="28" hits="2" branch="False" />
+            <line number="29" hits="2" branch="False" />
+            <line number="30" hits="0" branch="False" />
+            <line number="31" hits="2" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="12">
+          <methods>
+            <method name="get_LikelyOffline" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="25" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="14" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+            <method name="ReportNetworkFailure" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="28" hits="0" branch="False" />
+                <line number="29" hits="0" branch="False" />
+                <line number="30" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="24" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="31" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="ReportNetworkAvailable" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="34" hits="0" branch="False" />
+                <line number="35" hits="0" branch="False" />
+                <line number="36" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="20" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="37" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="ClearCacheAsync" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="48" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="RemoveAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="66" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="IsOnlineAsync" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="68" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="WatchAsync" signature="(Microsoft.JSInterop.DotNetObjectReference`1&lt;T&gt;)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="71" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(Microsoft.JSInterop.IJSRuntime,GastosApp.Web.Services.TokenStore)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="10" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name=".cctor" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="22" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="25" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="14" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="28" hits="0" branch="False" />
+            <line number="29" hits="0" branch="False" />
+            <line number="30" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="24" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="31" hits="0" branch="False" />
+            <line number="34" hits="0" branch="False" />
+            <line number="35" hits="0" branch="False" />
+            <line number="36" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="20" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="37" hits="0" branch="False" />
+            <line number="48" hits="0" branch="False" />
+            <line number="66" hits="0" branch="False" />
+            <line number="68" hits="0" branch="False" />
+            <line number="71" hits="0" branch="False" />
+            <line number="10" hits="0" branch="False" />
+            <line number="22" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;DisposeAsync&gt;d__26" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="91" hits="0" branch="False" />
+                <line number="92" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="31" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="93" hits="0" branch="False" />
+                <line number="94" hits="0" branch="False" />
+                <line number="95" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="91" hits="0" branch="False" />
+            <line number="92" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="31" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="93" hits="0" branch="False" />
+            <line number="94" hits="0" branch="False" />
+            <line number="95" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;GetCachedAsync&gt;d__16" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="40" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="176" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="40" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="176" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;KeyAsync&gt;d__24" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="4">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="4">
+              <lines>
+                <line number="75" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="137" type="jump" coverage="0%" />
+                    <condition number="159" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="75" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="137" type="jump" coverage="0%" />
+                <condition number="159" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;PendingAsync&gt;d__19" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="4">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="4">
+              <lines>
+                <line number="51" hits="0" branch="False" />
+                <line number="52" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="165" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="53" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="206" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="54" hits="0" branch="False" />
+                <line number="55" hits="0" branch="False" />
+                <line number="56" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="51" hits="0" branch="False" />
+            <line number="52" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="165" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="53" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="206" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="54" hits="0" branch="False" />
+            <line number="55" hits="0" branch="False" />
+            <line number="56" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;SaveAsync&gt;d__20" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="6">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="6">
+              <lines>
+                <line number="59" hits="0" branch="False" />
+                <line number="60" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="80" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="61" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="230" type="jump" coverage="0%" />
+                    <condition number="242" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="62" hits="0" branch="False" />
+                <line number="63" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="59" hits="0" branch="False" />
+            <line number="60" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="80" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="61" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="230" type="jump" coverage="0%" />
+                <condition number="242" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="62" hits="0" branch="False" />
+            <line number="63" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;SetCachedAsync&gt;d__17" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="43" hits="0" branch="False" />
+                <line number="44" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="199" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="45" hits="0" branch="False" />
+                <line number="46" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="43" hits="0" branch="False" />
+            <line number="44" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="199" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="45" hits="0" branch="False" />
+            <line number="46" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OfflineStore/&lt;TryAsync&gt;d__25`1" filename="Services/OfflineStore.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="78" hits="0" branch="False" />
+                <line number="80" hits="0" branch="False" />
+                <line number="81" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="74" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="82" hits="0" branch="False" />
+                <line number="84" hits="0" branch="False" />
+                <line number="85" hits="0" branch="False" />
+                <line number="86" hits="0" branch="False" />
+                <line number="88" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="78" hits="0" branch="False" />
+            <line number="80" hits="0" branch="False" />
+            <line number="81" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="74" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="82" hits="0" branch="False" />
+            <line number="84" hits="0" branch="False" />
+            <line number="85" hits="0" branch="False" />
+            <line number="86" hits="0" branch="False" />
+            <line number="88" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.OperationsService" filename="Services/OperationsService.cs" line-rate="0.159" branch-rate="0.25" complexity="36">
+          <methods>
+            <method name="ServicesAsync" signature="(System.Boolean)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="9" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="12" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+            <method name="SaveServiceAsync" signature="(GastosApp.Web.Models.ServiceForm,System.Nullable`1&lt;System.Guid&gt;)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="10" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="7" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="11" hits="0" branch="False" />
+                <line number="12" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="TransactionsAsync" signature="(System.Int32,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;GastosApp.Web.Models.TransactionType&gt;,System.Nullable`1&lt;System.DateTime&gt;,System.Nullable`1&lt;System.DateTime&gt;)" line-rate="0" branch-rate="0" complexity="6">
+              <lines>
+                <line number="15" hits="0" branch="False" />
+                <line number="16" hits="0" branch="False" />
+                <line number="17" hits="0" branch="False" />
+                <line number="18" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="132" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="19" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="168" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="20" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="225" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="21" hits="0" branch="False" />
+                <line number="22" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="TransactionAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="23" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="SaveTransactionAsync" signature="(GastosApp.Web.Models.TransactionForm,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;)" line-rate="0" branch-rate="0" complexity="6">
+              <lines>
+                <line number="25" hits="0" branch="False" />
+                <line number="26" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="12" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="27" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="39" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="28" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="66" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="29" hits="0" branch="False" />
+                <line number="30" hits="0" branch="False" />
+                <line number="31" hits="0" branch="False" />
+                <line number="32" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="NewTransaction" signature="(GastosApp.Web.Models.TransactionForm,System.Nullable`1&lt;System.Guid&gt;)" line-rate="1" branch-rate="1" complexity="6">
+              <lines>
+                <line number="35" hits="6" branch="True" condition-coverage="100% (6/6)">
+                  <conditions>
+                    <condition number="52" type="jump" coverage="100%" />
+                    <condition number="78" type="jump" coverage="100%" />
+                    <condition number="108" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="36" hits="6" branch="False" />
+                <line number="37" hits="6" branch="False" />
+                <line number="38" hits="6" branch="False" />
+                <line number="39" hits="6" branch="False" />
+                <line number="40" hits="6" branch="False" />
+              </lines>
+            </method>
+            <method name="DeleteTransactionAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="41" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="PlansAsync" signature="(GastosApp.Web.Models.FinancePlanStatus)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="43" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="PlanAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="44" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="AddPlanAsync" signature="(GastosApp.Web.Models.FinancePlanForm)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="46" hits="0" branch="False" />
+                <line number="47" hits="0" branch="False" />
+                <line number="48" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="PlanScheduleAsync" signature="(GastosApp.Web.Models.FinancePlanForm)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="50" hits="0" branch="False" />
+                <line number="51" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="SettleAsync" signature="(System.Guid,System.Nullable`1&lt;System.DateOnly&gt;,System.Nullable`1&lt;System.Decimal&gt;)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="53" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="SetPaidInstallmentsAsync" signature="(System.Guid,System.Collections.Generic.IEnumerable`1&lt;System.Int32&gt;)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="55" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="DeletePlanAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="56" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="BalanceAsync" signature="(System.Guid)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="58" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="Offset" signature="(System.DateTime)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="59" hits="6" branch="False" />
+              </lines>
+            </method>
+            <method name="Add" signature="(System.Collections.Generic.List`1&lt;System.String&gt;,System.String,System.Object)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="61" hits="0" branch="False" />
+                <line number="62" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="7" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="63" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(GastosApp.Web.Services.ApiClient)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="6" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="9" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="12" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="10" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="7" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="11" hits="0" branch="False" />
+            <line number="12" hits="0" branch="False" />
+            <line number="15" hits="0" branch="False" />
+            <line number="16" hits="0" branch="False" />
+            <line number="17" hits="0" branch="False" />
+            <line number="18" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="132" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="19" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="168" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="20" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="225" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="21" hits="0" branch="False" />
+            <line number="22" hits="0" branch="False" />
+            <line number="23" hits="0" branch="False" />
+            <line number="25" hits="0" branch="False" />
+            <line number="26" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="12" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="27" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="39" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="28" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="66" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="29" hits="0" branch="False" />
+            <line number="30" hits="0" branch="False" />
+            <line number="31" hits="0" branch="False" />
+            <line number="32" hits="0" branch="False" />
+            <line number="35" hits="6" branch="True" condition-coverage="100% (6/6)">
+              <conditions>
+                <condition number="52" type="jump" coverage="100%" />
+                <condition number="78" type="jump" coverage="100%" />
+                <condition number="108" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="36" hits="6" branch="False" />
+            <line number="37" hits="6" branch="False" />
+            <line number="38" hits="6" branch="False" />
+            <line number="39" hits="6" branch="False" />
+            <line number="40" hits="6" branch="False" />
+            <line number="41" hits="0" branch="False" />
+            <line number="43" hits="0" branch="False" />
+            <line number="44" hits="0" branch="False" />
+            <line number="46" hits="0" branch="False" />
+            <line number="47" hits="0" branch="False" />
+            <line number="48" hits="0" branch="False" />
+            <line number="50" hits="0" branch="False" />
+            <line number="51" hits="0" branch="False" />
+            <line number="53" hits="0" branch="False" />
+            <line number="55" hits="0" branch="False" />
+            <line number="56" hits="0" branch="False" />
+            <line number="58" hits="0" branch="False" />
+            <line number="59" hits="6" branch="False" />
+            <line number="61" hits="0" branch="False" />
+            <line number="62" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="7" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="63" hits="0" branch="False" />
+            <line number="6" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.SessionRefresher" filename="Services/SessionRefresher.cs" line-rate="1" branch-rate="1" complexity="2">
+          <methods>
+            <method name=".ctor" signature="(System.Net.Http.IHttpClientFactory,GastosApp.Web.Services.TokenStore)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="12" hits="2" branch="False" />
+              </lines>
+            </method>
+            <method name=".cctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="17" hits="1" branch="False" />
+                <line number="21" hits="1" branch="False" />
+                <line number="22" hits="1" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="12" hits="2" branch="False" />
+            <line number="17" hits="1" branch="False" />
+            <line number="21" hits="1" branch="False" />
+            <line number="22" hits="1" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.SessionRefresher/&lt;EnsureFreshAsync&gt;d__7" filename="Services/SessionRefresher.cs" line-rate="1" branch-rate="0.5" complexity="14">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="1" branch-rate="0.5" complexity="14">
+              <lines>
+                <line number="29" hits="2" branch="False" />
+                <line number="30" hits="2" branch="False" />
+                <line number="31" hits="3" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="191" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="32" hits="1" branch="True" condition-coverage="50% (2/4)">
+                  <conditions>
+                    <condition number="206" type="jump" coverage="50%" />
+                    <condition number="250" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="33" hits="1" branch="True" condition-coverage="25% (1/4)">
+                  <conditions>
+                    <condition number="284" type="jump" coverage="50%" />
+                    <condition number="292" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="35" hits="1" branch="False" />
+                <line number="37" hits="1" branch="False" />
+                <line number="39" hits="1" branch="False" />
+                <line number="40" hits="1" branch="True" condition-coverage="50% (2/4)">
+                  <conditions>
+                    <condition number="577" type="jump" coverage="50%" />
+                    <condition number="613" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="41" hits="1" branch="False" />
+                <line number="44" hits="1" branch="False" />
+                <line number="45" hits="1" branch="False" />
+                <line number="46" hits="1" branch="False" />
+                <line number="47" hits="2" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="29" hits="2" branch="False" />
+            <line number="30" hits="2" branch="False" />
+            <line number="31" hits="3" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="191" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="32" hits="1" branch="True" condition-coverage="50% (2/4)">
+              <conditions>
+                <condition number="206" type="jump" coverage="50%" />
+                <condition number="250" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="33" hits="1" branch="True" condition-coverage="25% (1/4)">
+              <conditions>
+                <condition number="284" type="jump" coverage="50%" />
+                <condition number="292" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="35" hits="1" branch="False" />
+            <line number="37" hits="1" branch="False" />
+            <line number="39" hits="1" branch="False" />
+            <line number="40" hits="1" branch="True" condition-coverage="50% (2/4)">
+              <conditions>
+                <condition number="577" type="jump" coverage="50%" />
+                <condition number="613" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="41" hits="1" branch="False" />
+            <line number="44" hits="1" branch="False" />
+            <line number="45" hits="1" branch="False" />
+            <line number="46" hits="1" branch="False" />
+            <line number="47" hits="2" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.SessionRefresher/&lt;RefreshAsync&gt;d__8" filename="Services/SessionRefresher.cs" line-rate="0.5" branch-rate="0.21420000000000003" complexity="14">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.5" branch-rate="0.21420000000000003" complexity="14">
+              <lines>
+                <line number="50" hits="1" branch="False" />
+                <line number="53" hits="1" branch="False" />
+                <line number="54" hits="1" branch="False" />
+                <line number="55" hits="1" branch="False" />
+                <line number="56" hits="1" branch="False" />
+                <line number="57" hits="0" branch="False" />
+                <line number="58" hits="0" branch="False" />
+                <line number="59" hits="0" branch="False" />
+                <line number="62" hits="1" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="353" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="63" hits="1" branch="False" />
+                <line number="64" hits="1" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="496" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="65" hits="1" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="532" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="66" hits="1" branch="False" />
+                <line number="67" hits="1" branch="False" />
+                <line number="70" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="700" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="71" hits="0" branch="False" />
+                <line number="73" hits="0" branch="False" />
+                <line number="74" hits="0" branch="False" />
+                <line number="77" hits="0" branch="True" condition-coverage="0% (0/6)">
+                  <conditions>
+                    <condition number="961" type="jump" coverage="0%" />
+                    <condition number="972" type="jump" coverage="0%" />
+                    <condition number="990" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="78" hits="0" branch="False" />
+                <line number="79" hits="0" branch="False" />
+                <line number="80" hits="0" branch="False" />
+                <line number="83" hits="0" branch="False" />
+                <line number="84" hits="1" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="50" hits="1" branch="False" />
+            <line number="53" hits="1" branch="False" />
+            <line number="54" hits="1" branch="False" />
+            <line number="55" hits="1" branch="False" />
+            <line number="56" hits="1" branch="False" />
+            <line number="57" hits="0" branch="False" />
+            <line number="58" hits="0" branch="False" />
+            <line number="59" hits="0" branch="False" />
+            <line number="62" hits="1" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="353" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="63" hits="1" branch="False" />
+            <line number="64" hits="1" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="496" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="65" hits="1" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="532" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="66" hits="1" branch="False" />
+            <line number="67" hits="1" branch="False" />
+            <line number="70" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="700" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="71" hits="0" branch="False" />
+            <line number="73" hits="0" branch="False" />
+            <line number="74" hits="0" branch="False" />
+            <line number="77" hits="0" branch="True" condition-coverage="0% (0/6)">
+              <conditions>
+                <condition number="961" type="jump" coverage="0%" />
+                <condition number="972" type="jump" coverage="0%" />
+                <condition number="990" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="78" hits="0" branch="False" />
+            <line number="79" hits="0" branch="False" />
+            <line number="80" hits="0" branch="False" />
+            <line number="83" hits="0" branch="False" />
+            <line number="84" hits="1" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.TokenStore" filename="Services/TokenStore.cs" line-rate="0.6" branch-rate="1" complexity="4">
+          <methods>
+            <method name="SetSessionAsync" signature="(GastosApp.Web.Models.AuthSession)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="39" hits="2" branch="False" />
+              </lines>
+            </method>
+            <method name="ClearAsync" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="41" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="Deserialize" signature="(System.String)" line-rate="0.5714" branch-rate="1" complexity="1">
+              <lines>
+                <line number="44" hits="3" branch="False" />
+                <line number="46" hits="3" branch="False" />
+                <line number="47" hits="3" branch="False" />
+                <line number="49" hits="0" branch="False" />
+                <line number="50" hits="0" branch="False" />
+                <line number="51" hits="0" branch="False" />
+                <line number="53" hits="3" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(GastosApp.Web.Services.LocalStorageService)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="15" hits="2" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="39" hits="2" branch="False" />
+            <line number="41" hits="0" branch="False" />
+            <line number="44" hits="3" branch="False" />
+            <line number="46" hits="3" branch="False" />
+            <line number="47" hits="3" branch="False" />
+            <line number="49" hits="0" branch="False" />
+            <line number="50" hits="0" branch="False" />
+            <line number="51" hits="0" branch="False" />
+            <line number="53" hits="3" branch="False" />
+            <line number="15" hits="2" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Services.TokenStore/&lt;GetSessionAsync&gt;d__3" filename="Services/TokenStore.cs" line-rate="0.7272" branch-rate="0.75" complexity="8">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0.7272" branch-rate="0.75" complexity="8">
+              <lines>
+                <line number="20" hits="4" branch="False" />
+                <line number="21" hits="4" branch="False" />
+                <line number="22" hits="5" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="178" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="24" hits="3" branch="False" />
+                <line number="26" hits="3" branch="True" condition-coverage="50% (1/2)">
+                  <conditions>
+                    <condition number="217" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="29" hits="3" branch="True" condition-coverage="75% (3/4)">
+                  <conditions>
+                    <condition number="247" type="jump" coverage="100%" />
+                    <condition number="270" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+                <line number="30" hits="0" branch="False" />
+                <line number="31" hits="0" branch="False" />
+                <line number="32" hits="0" branch="False" />
+                <line number="35" hits="3" branch="False" />
+                <line number="36" hits="4" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="20" hits="4" branch="False" />
+            <line number="21" hits="4" branch="False" />
+            <line number="22" hits="5" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="178" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="24" hits="3" branch="False" />
+            <line number="26" hits="3" branch="True" condition-coverage="50% (1/2)">
+              <conditions>
+                <condition number="217" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="29" hits="3" branch="True" condition-coverage="75% (3/4)">
+              <conditions>
+                <condition number="247" type="jump" coverage="100%" />
+                <condition number="270" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+            <line number="30" hits="0" branch="False" />
+            <line number="31" hits="0" branch="False" />
+            <line number="32" hits="0" branch="False" />
+            <line number="35" hits="3" branch="False" />
+            <line number="36" hits="4" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.ApiResult`1" filename="Models/ApiResponse.cs" line-rate="1" branch-rate="1" complexity="4">
+          <methods>
+            <method name="Ok" signature="(T,System.Int32)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="32" hits="6" branch="False" />
+              </lines>
+            </method>
+            <method name="Fail" signature="(System.String,System.Int32,System.Collections.Generic.IDictionary`2&lt;System.String,System.String[]&gt;)" line-rate="1" branch-rate="1" complexity="2">
+              <lines>
+                <line number="36" hits="19" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="32" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="37" hits="19" branch="False" />
+                <line number="38" hits="19" branch="False" />
+                <line number="39" hits="19" branch="False" />
+                <line number="40" hits="19" branch="False" />
+                <line number="41" hits="19" branch="False" />
+                <line number="42" hits="19" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="29" hits="25" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="32" hits="6" branch="False" />
+            <line number="36" hits="19" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="32" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="37" hits="19" branch="False" />
+            <line number="38" hits="19" branch="False" />
+            <line number="39" hits="19" branch="False" />
+            <line number="40" hits="19" branch="False" />
+            <line number="41" hits="19" branch="False" />
+            <line number="42" hits="19" branch="False" />
+            <line number="29" hits="25" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.AttachmentRules" filename="Models/AttachmentModels.cs" line-rate="0.5384" branch-rate="0.4827" complexity="33">
+          <methods>
+            <method name="MaxSlots" signature="(GastosApp.Web.Models.AttachmentType)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="75" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="2" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+            <method name="AllowedContentTypes" signature="(GastosApp.Web.Models.AttachmentType)" line-rate="1" branch-rate="1" complexity="4">
+              <lines>
+                <line number="77" hits="9" branch="True" condition-coverage="100% (4/4)">
+                  <conditions>
+                    <condition number="6" type="jump" coverage="100%" />
+                    <condition number="12" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="78" hits="9" branch="False" />
+                <line number="79" hits="3" branch="False" />
+                <line number="80" hits="1" branch="False" />
+                <line number="81" hits="5" branch="False" />
+                <line number="82" hits="9" branch="False" />
+              </lines>
+            </method>
+            <method name="Accept" signature="(GastosApp.Web.Models.AttachmentType)" line-rate="0" branch-rate="0" complexity="4">
+              <lines>
+                <line number="85" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="6" type="jump" coverage="0%" />
+                    <condition number="12" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="86" hits="0" branch="False" />
+                <line number="87" hits="0" branch="False" />
+                <line number="88" hits="0" branch="False" />
+                <line number="89" hits="0" branch="False" />
+                <line number="90" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="ResolveContentType" signature="(GastosApp.Web.Models.AttachmentType,System.String,System.String)" line-rate="1" branch-rate="1" complexity="10">
+              <lines>
+                <line number="97" hits="9" branch="False" />
+                <line number="98" hits="9" branch="False" />
+                <line number="99" hits="9" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="9" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="100" hits="9" branch="True" condition-coverage="100% (4/4)">
+                  <conditions>
+                    <condition number="32" type="jump" coverage="100%" />
+                    <condition number="51" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="101" hits="2" branch="False" />
+                <line number="103" hits="7" branch="True" condition-coverage="100% (4/4)">
+                  <conditions>
+                    <condition number="76" type="jump" coverage="100%" />
+                    <condition number="90" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="104" hits="7" branch="False" />
+                <line number="105" hits="7" branch="False" />
+                <line number="106" hits="7" branch="False" />
+                <line number="107" hits="9" branch="False" />
+              </lines>
+            </method>
+            <method name="IsImage" signature="(System.String)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="109" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="IsPdf" signature="(System.String)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="110" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="IsXml" signature="(System.String)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="111" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="DisplayName" signature="(GastosApp.Web.Models.AttachmentType)" line-rate="0" branch-rate="0" complexity="5">
+              <lines>
+                <line number="113" hits="0" branch="True" condition-coverage="0% (0/5)">
+                  <conditions>
+                    <condition number="7" type="switch" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="114" hits="0" branch="False" />
+                <line number="115" hits="0" branch="False" />
+                <line number="116" hits="0" branch="False" />
+                <line number="117" hits="0" branch="False" />
+                <line number="118" hits="0" branch="False" />
+                <line number="119" hits="0" branch="False" />
+                <line number="120" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="FormatSize" signature="(System.Int64)" line-rate="0" branch-rate="0" complexity="4">
+              <lines>
+                <line number="122" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="11" type="jump" coverage="0%" />
+                    <condition number="20" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="123" hits="0" branch="False" />
+                <line number="124" hits="0" branch="False" />
+                <line number="125" hits="0" branch="False" />
+                <line number="126" hits="0" branch="False" />
+                <line number="127" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name=".cctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="60" hits="1" branch="False" />
+                <line number="61" hits="1" branch="False" />
+                <line number="63" hits="1" branch="False" />
+                <line number="64" hits="1" branch="False" />
+                <line number="65" hits="1" branch="False" />
+                <line number="66" hits="1" branch="False" />
+                <line number="67" hits="1" branch="False" />
+                <line number="68" hits="1" branch="False" />
+                <line number="69" hits="1" branch="False" />
+                <line number="70" hits="1" branch="False" />
+                <line number="71" hits="1" branch="False" />
+                <line number="73" hits="1" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="75" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="2" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="77" hits="9" branch="True" condition-coverage="100% (4/4)">
+              <conditions>
+                <condition number="6" type="jump" coverage="100%" />
+                <condition number="12" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="78" hits="9" branch="False" />
+            <line number="79" hits="3" branch="False" />
+            <line number="80" hits="1" branch="False" />
+            <line number="81" hits="5" branch="False" />
+            <line number="82" hits="9" branch="False" />
+            <line number="85" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="6" type="jump" coverage="0%" />
+                <condition number="12" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="86" hits="0" branch="False" />
+            <line number="87" hits="0" branch="False" />
+            <line number="88" hits="0" branch="False" />
+            <line number="89" hits="0" branch="False" />
+            <line number="90" hits="0" branch="False" />
+            <line number="97" hits="9" branch="False" />
+            <line number="98" hits="9" branch="False" />
+            <line number="99" hits="9" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="9" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="100" hits="9" branch="True" condition-coverage="100% (4/4)">
+              <conditions>
+                <condition number="32" type="jump" coverage="100%" />
+                <condition number="51" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="101" hits="2" branch="False" />
+            <line number="103" hits="7" branch="True" condition-coverage="100% (4/4)">
+              <conditions>
+                <condition number="76" type="jump" coverage="100%" />
+                <condition number="90" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="104" hits="7" branch="False" />
+            <line number="105" hits="7" branch="False" />
+            <line number="106" hits="7" branch="False" />
+            <line number="107" hits="9" branch="False" />
+            <line number="109" hits="0" branch="False" />
+            <line number="110" hits="0" branch="False" />
+            <line number="111" hits="0" branch="False" />
+            <line number="113" hits="0" branch="True" condition-coverage="0% (0/5)">
+              <conditions>
+                <condition number="7" type="switch" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="114" hits="0" branch="False" />
+            <line number="115" hits="0" branch="False" />
+            <line number="116" hits="0" branch="False" />
+            <line number="117" hits="0" branch="False" />
+            <line number="118" hits="0" branch="False" />
+            <line number="119" hits="0" branch="False" />
+            <line number="120" hits="0" branch="False" />
+            <line number="122" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="11" type="jump" coverage="0%" />
+                <condition number="20" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="123" hits="0" branch="False" />
+            <line number="124" hits="0" branch="False" />
+            <line number="125" hits="0" branch="False" />
+            <line number="126" hits="0" branch="False" />
+            <line number="127" hits="0" branch="False" />
+            <line number="60" hits="1" branch="False" />
+            <line number="61" hits="1" branch="False" />
+            <line number="63" hits="1" branch="False" />
+            <line number="64" hits="1" branch="False" />
+            <line number="65" hits="1" branch="False" />
+            <line number="66" hits="1" branch="False" />
+            <line number="67" hits="1" branch="False" />
+            <line number="68" hits="1" branch="False" />
+            <line number="69" hits="1" branch="False" />
+            <line number="70" hits="1" branch="False" />
+            <line number="71" hits="1" branch="False" />
+            <line number="73" hits="1" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.AuthSession" filename="Models/AuthModels.cs" line-rate="1" branch-rate="0.5" complexity="4">
+          <methods>
+            <method name="get_CanRefresh" signature="()" line-rate="1" branch-rate="0.5" complexity="4">
+              <lines>
+                <line number="50" hits="5" branch="True" condition-coverage="50% (2/4)">
+                  <conditions>
+                    <condition number="11" type="jump" coverage="50%" />
+                    <condition number="33" type="jump" coverage="50%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="50" hits="5" branch="True" condition-coverage="50% (2/4)">
+              <conditions>
+                <condition number="11" type="jump" coverage="50%" />
+                <condition number="33" type="jump" coverage="50%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.AccountTypeExtensions" filename="Models/Enums.cs" line-rate="0" branch-rate="0" complexity="6">
+          <methods>
+            <method name="DisplayName" signature="(GastosApp.Web.Models.AccountType)" line-rate="0" branch-rate="0" complexity="5">
+              <lines>
+                <line number="21" hits="0" branch="True" condition-coverage="0% (0/5)">
+                  <conditions>
+                    <condition number="7" type="switch" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="22" hits="0" branch="False" />
+                <line number="23" hits="0" branch="False" />
+                <line number="24" hits="0" branch="False" />
+                <line number="25" hits="0" branch="False" />
+                <line number="26" hits="0" branch="False" />
+                <line number="27" hits="0" branch="False" />
+                <line number="28" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="DisplayName" signature="(GastosApp.Web.Models.AllowedFinanceAccountType)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="31" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="21" hits="0" branch="True" condition-coverage="0% (0/5)">
+              <conditions>
+                <condition number="7" type="switch" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="22" hits="0" branch="False" />
+            <line number="23" hits="0" branch="False" />
+            <line number="24" hits="0" branch="False" />
+            <line number="25" hits="0" branch="False" />
+            <line number="26" hits="0" branch="False" />
+            <line number="27" hits="0" branch="False" />
+            <line number="28" hits="0" branch="False" />
+            <line number="31" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.NewTransactionBody" filename="Models/OfflineModels.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="(System.String,System.String,System.Decimal,System.DateTimeOffset,GastosApp.Web.Models.TransactionType,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;,System.Nullable`1&lt;System.Guid&gt;)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="4" hits="6" branch="False" />
+                <line number="5" hits="6" branch="False" />
+                <line number="6" hits="6" branch="False" />
+                <line number="7" hits="6" branch="False" />
+                <line number="8" hits="6" branch="False" />
+                <line number="9" hits="6" branch="False" />
+                <line number="10" hits="6" branch="False" />
+                <line number="11" hits="6" branch="False" />
+                <line number="12" hits="6" branch="False" />
+                <line number="13" hits="6" branch="False" />
+                <line number="14" hits="6" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="4" hits="6" branch="False" />
+            <line number="5" hits="6" branch="False" />
+            <line number="6" hits="6" branch="False" />
+            <line number="7" hits="6" branch="False" />
+            <line number="8" hits="6" branch="False" />
+            <line number="9" hits="6" branch="False" />
+            <line number="10" hits="6" branch="False" />
+            <line number="11" hits="6" branch="False" />
+            <line number="12" hits="6" branch="False" />
+            <line number="13" hits="6" branch="False" />
+            <line number="14" hits="6" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.TransactionTypes" filename="Models/OperationsModels.cs" line-rate="1" branch-rate="1" complexity="4">
+          <methods>
+            <method name="IsTransfer" signature="(GastosApp.Web.Models.TransactionType)" line-rate="1" branch-rate="1" complexity="2">
+              <lines>
+                <line number="10" hits="10" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="4" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+            <method name="IsMovement" signature="(GastosApp.Web.Models.TransactionType)" line-rate="1" branch-rate="1" complexity="2">
+              <lines>
+                <line number="13" hits="12" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="2" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="10" hits="10" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="4" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="13" hits="12" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="2" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.SystemCategories" filename="Models/OperationsModels.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="Contains" signature="(System.String)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="19" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="11" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="19" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="11" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.FinanceAccountListItem" filename="Models/AccountModels.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name="get_Label" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="16" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="16" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.AccountLabel" filename="Models/AccountModels.cs" line-rate="0" branch-rate="0" complexity="2">
+          <methods>
+            <method name="For" signature="(System.String,System.String)" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="22" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="6" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="22" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="6" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+          </lines>
+        </class>
+        <class name="GastosApp.Web.Models.ActiveAccountDto" filename="Models/AccountModels.cs" line-rate="0" branch-rate="0" complexity="10">
+          <methods>
+            <method name="get_IsCredit" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="46" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="get_Label" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="49" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="get_DaysUntilPayment" signature="()" line-rate="0" branch-rate="0" complexity="2">
+              <lines>
+                <line number="52" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="14" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="53" hits="0" branch="False" />
+                <line number="54" hits="0" branch="False" />
+              </lines>
+            </method>
+            <method name="get_CycleProgress" signature="()" line-rate="0" branch-rate="0" complexity="6">
+              <lines>
+                <line number="64" hits="0" branch="False" />
+                <line number="65" hits="0" branch="True" condition-coverage="0% (0/4)">
+                  <conditions>
+                    <condition number="15" type="jump" coverage="0%" />
+                    <condition number="39" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="67" hits="0" branch="False" />
+                <line number="68" hits="0" branch="True" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="137" type="jump" coverage="0%" />
+                  </conditions>
+                </line>
+                <line number="70" hits="0" branch="False" />
+                <line number="71" hits="0" branch="False" />
+                <line number="72" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="46" hits="0" branch="False" />
+            <line number="49" hits="0" branch="False" />
+            <line number="52" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="14" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="53" hits="0" branch="False" />
+            <line number="54" hits="0" branch="False" />
+            <line number="64" hits="0" branch="False" />
+            <line number="65" hits="0" branch="True" condition-coverage="0% (0/4)">
+              <conditions>
+                <condition number="15" type="jump" coverage="0%" />
+                <condition number="39" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="67" hits="0" branch="False" />
+            <line number="68" hits="0" branch="True" condition-coverage="0% (0/2)">
+              <conditions>
+                <condition number="137" type="jump" coverage="0%" />
+              </conditions>
+            </line>
+            <line number="70" hits="0" branch="False" />
+            <line number="71" hits="0" branch="False" />
+            <line number="72" hits="0" branch="False" />
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>
