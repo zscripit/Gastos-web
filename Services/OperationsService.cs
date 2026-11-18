@@ -28,7 +28,7 @@ public sealed class OperationsService(ApiClient api)
         return id is null
             ? api.PostAsync<TransactionDto>("/api/Transaction", NewTransaction(form, clientId))
             : api.PutAsync<TransactionDto>($"/api/Transaction/{id}", new { form.Name, form.Description, form.Amount,
-                date = Offset(form.Date), categoryId, serviceId });
+                date = Offset(form.Date), categoryId, serviceId, version = form.Version });
     }
 
     /// <summary>Body del alta. Es el mismo que se guarda en la cola cuando no hay conexión.</summary>

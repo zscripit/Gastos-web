@@ -1,7 +1,10 @@
-# Valida cada PR hacia main o develop: compila y publica el frontend (sin desplegarlo).
+# Integración continua de la PWA (prácticas 13 y 14): en cada push y pull request ejecuta las pruebas unitarias
+# con cobertura y las pruebas de contrato, publica los resultados y comprueba que la app se publica.
 name: CI
 
 on:
+  push:
+    branches: ['**']
   pull_request:
     branches: [main, develop]
 
@@ -9,12 +12,58 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # tests/global.json activa Microsoft.Testing.Platform para dotnet test.
+      - name: Pruebas unitarias con cobertura
+        working-directory: tests
+        run: |
+          set -o pipefail
+          dotnet test --project GastosApp.Web.Tests -c Release \
+            -- --report-xunit-trx --results-directory "$GITHUB_WORKSPACE/TestResults" \
+               --coverlet --coverlet-output-format cobertura | tee "$GITHUB_WORKSPACE/unit.txt"
+
+      - name: Pruebas de contrato
+        run: |
+          set -o pipefail
+          dotnet run --project ContractTests -c Release | tee contract.txt
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Pruebas de la PWA"
+            echo '```'; grep -E "total:|correcto:|error:|omitido:|duración|con errores" unit.txt || true; echo '```'
+            echo '```'; tail -1 contract.txt || true; echo '```'
+            cov=$(find TestResults tests/TestResults -name 'coverage.cobertura*.xml' 2>/dev/null | head -1)
+            [ -n "$cov" ] && echo "Cobertura de líneas: $(grep -o 'line-rate="[0-9.]*"' "$cov" | head -1)  ·  ramas: $(grep -o 'branch-rate="[0-9.]*"' "$cov" | head -1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas-pwa
+          path: |
+            TestResults/
+            tests/TestResults/
+            unit.txt
+            contract.txt
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v4
 

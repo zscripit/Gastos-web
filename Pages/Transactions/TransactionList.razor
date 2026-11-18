@@ -251,7 +251,7 @@ else
             var result = await Operations.TransactionAsync(id);
             if (!result.Success || result.Data is null) { _error = result.Error; return; }
             var item = result.Data; _detail = null; _focusPanel = true; _id = id; _linked = item.TransferId is not null; _accountName = AccountName(item.FinanceAccountId, item.FinanceAccountName); _attachments = item.Attachments;
-            _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId };
+            _form = new() { Name = item.Name, Description = item.Description, Amount = item.Amount, Date = item.Date.LocalDateTime, TransactionType = item.TransactionType, FinanceAccountId = item.FinanceAccountId, CategoryId = item.CategoryId, ServiceId = item.ServiceId, Version = item.Version };
             if (!_categories.Any(x => x.Id == item.CategoryId)) _categories.Add(new() { Id = item.CategoryId, Name = item.CategoryName });
             if (item.ServiceId is Guid serviceId && !_services.Any(x => x.Id == serviceId)) _services.Add(new() { Id = serviceId, Name = item.ServiceName ?? "Servicio archivado" });
             _delete = null;
@@ -282,7 +282,7 @@ else
                 Cancel(); await FetchAsync();
             }
             else if (result.StatusCode == 0 && clientId is Guid offlineId) await QueueOfflineAsync(offlineId);
-            else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)) + (result.StatusCode == 409 ? " Si pertenece a una compra a meses, adminístrala desde Compras a meses." : "");
+            else _error = result.Error + " " + string.Join(" ", result.ValidationErrors.Values.SelectMany(x => x)) + (result.StatusCode == 409 && result.Error?.Contains("MSI") == true ? " Adminístrala desde Compras a meses." : "");
         }
         finally { _busy = false; }
         // Si algún comprobante falló, se abre el movimiento ya guardado para reintentar desde ahí.
