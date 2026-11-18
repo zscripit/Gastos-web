@@ -50,7 +50,7 @@ public class ApiClientTests
         var result = await Client(handler).PostAsync<Item>("/api/Transaction", new { name = "Despensa" });
         Assert.Equal(201, result.StatusCode);
         Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
-        Assert.Equal("{\"name\":\"Despensa\"}", await handler.Requests[0].Content!.ReadAsStringAsync());
+        Assert.Equal("{\"name\":\"Despensa\"}", await handler.Requests[0].Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     // D5 = F por ser 204: sin cuerpo no es un error.
