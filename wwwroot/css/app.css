@@ -1000,10 +1000,21 @@ select.input optgroup {
 
     .nav-signout:hover { background: var(--surface); color: var(--text); }
 
+    /* En columna: el aviso de conexión queda arriba del contenido. En fila se volvía una columna lateral
+       a toda la altura que empujaba la pantalla a la derecha. */
     .app-main {
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
         overflow-x: hidden;
+    }
+
+    /* Mismo ancho y márgenes que el contenido (máx. 1040px con 32px de padding). */
+    .app-main > .offline-banner {
+        width: calc(100% - 64px);
+        max-width: 976px;
+        margin: 24px 32px 0;
+        box-sizing: border-box;
     }
 
     .app-content {
