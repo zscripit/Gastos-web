@@ -27,6 +27,7 @@
     <Compile Include="../../Services/ApiClient.cs" Link="Source/ApiClient.cs" />
     <Compile Include="../../Services/LocalStorageService.cs" Link="Source/LocalStorageService.cs" />
     <Compile Include="../../Services/OfflineStore.cs" Link="Source/OfflineStore.cs" />
+    <Compile Include="../../Services/OfflineSync.cs" Link="Source/OfflineSync.cs" />
     <Compile Include="../../Services/OperationsService.cs" Link="Source/OperationsService.cs" />
     <Compile Include="../../Services/SessionRefresher.cs" Link="Source/SessionRefresher.cs" />
     <Compile Include="../../Services/TokenStore.cs" Link="Source/TokenStore.cs" />

@@ -23,9 +23,12 @@ builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddScoped<TokenStore>();
 builder.Services.AddScoped<AuthHeaderHandler>();
 builder.Services.AddScoped<SessionRefresher>();
-builder.Services.AddHttpClient(SessionRefresher.ClientName, client => client.BaseAddress = new Uri(apiBaseUrl));
+// Tiempo límite de las peticiones a la API (práctica 12, RES-03): sin él, HttpClient espera 100 s y un servidor
+// que no responde dejaba "Guardando…" casi dos minutos. A los 20 s ApiClient lo reporta como tiempo agotado.
+var apiTimeout = TimeSpan.FromSeconds(20);
+builder.Services.AddHttpClient(SessionRefresher.ClientName, client => { client.BaseAddress = new Uri(apiBaseUrl); client.Timeout = apiTimeout; });
 
-builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
+builder.Services.AddHttpClient<ApiClient>(client => { client.BaseAddress = new Uri(apiBaseUrl); client.Timeout = apiTimeout; })
     .AddHttpMessageHandler<AuthHeaderHandler>();
 
 // Comprobantes: las URLs prefirmadas del storage van sin AuthHeaderHandler para no filtrar el JWT.
