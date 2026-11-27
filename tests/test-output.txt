@@ -1,0 +1,9 @@
+Ejecutando pruebas desde C:\gastos_project\GastosApp.Web\tests\GastosApp.Web.Tests\bin\Debug\net10.0\GastosApp.Web.Tests.dll (net10.0|x64)
+C:\gastos_project\GastosApp.Web\tests\GastosApp.Web.Tests\bin\Debug\net10.0\GastosApp.Web.Tests.dll (net10.0|x64) correcto (1s 871ms)
+
+Resumen de la serie de pruebas: Correcta!
+  total: 50
+  error: 0
+  correcto: 50
+  omitido: 0
+  duración: 3s 044ms

@@ -30,7 +30,6 @@ public sealed class AccountService(ApiClient api)
     public Task<ApiResult<FinanceAccountListItem>> EditAsync(Guid id, EditFinanceAccountRequest request) =>
         api.PutAsync<FinanceAccountListItem>($"/api/FinanceAccount/{id}", new
         {
-            financeAccountId = id,
             name = request.Name,
             description = request.Description,
             isArchived = request.IsArchived,

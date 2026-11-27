@@ -5,11 +5,26 @@ namespace GastosApp.Web.Services;
 
 /// <summary>
 /// Estado de conexión y cola de movimientos registrados sin red. Envía la cola en orden al iniciar la app,
-/// cuando el navegador recupera la conexión y cada minuto mientras haya pendientes.
+/// cuando el navegador recupera la conexión y, mientras haya pendientes, con espera progresiva.
 /// </summary>
 public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDisposable
 {
-    private static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan FirstRetry = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan MaxRetry = TimeSpan.FromMinutes(5);
+
+    // Intentos seguidos que fallaron por red o por límite de peticiones; vuelve a 0 al enviar o al recuperar la red.
+    private int _failures;
+
+    /// <summary>
+    /// Espera antes del siguiente reintento (exponential backoff): 5 s, 10 s, 20 s… hasta 5 min, más hasta un 20 %
+    /// al azar para que varios dispositivos que recuperan la red a la vez no reintenten todos en el mismo segundo.
+    /// </summary>
+    public static TimeSpan RetryDelay(int failures, double jitter)
+    {
+        var seconds = FirstRetry.TotalSeconds * Math.Pow(2, Math.Clamp(failures, 0, 16));
+        var capped = Math.Min(seconds, MaxRetry.TotalSeconds);
+        return TimeSpan.FromSeconds(capped * (1 + 0.2 * Math.Clamp(jitter, 0, 1)));
+    }
 
     private DotNetObjectReference<OfflineSync>? _self;
     private IJSObjectReference? _watch;
@@ -53,7 +68,11 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
     {
         IsOnline = online;
         Changed?.Invoke();
-        if (online) await SyncAsync();
+        if (online)
+        {
+            _failures = 0; // la red volvió: se reintenta ya y la espera progresiva empieza de nuevo
+            await SyncAsync();
+        }
     }
 
     /// <summary>Una petición falló por red: se muestra el aviso sin esperar al evento del navegador.</summary>
@@ -69,6 +88,7 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
     {
         if (IsOnline) return;
         IsOnline = true;
+        _failures = 0;
         Changed?.Invoke();
         _ = SyncAsync();
     }
@@ -113,6 +133,7 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
                 if (result.Success)
                 {
                     await store.RemoveAsync(item.ClientId);
+                    _failures = 0;
                     sent++;
                     IsOnline = true;
                     continue;
@@ -123,6 +144,7 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
                 if (result.StatusCode is 0 or 401 or 429)
                 {
                     if (result.StatusCode == 0) IsOnline = false;
+                    if (result.StatusCode is 0 or 429) _failures++;
                     break;
                 }
 
@@ -150,7 +172,7 @@ public sealed class OfflineSync(OfflineStore store, ApiClient api) : IAsyncDispo
         {
             while (!ct.IsCancellationRequested)
             {
-                await Task.Delay(RetryInterval, ct);
+                await Task.Delay(RetryDelay(_failures, Random.Shared.NextDouble()), ct);
                 if (Pending.Any(p => p.Error is null)) await SyncAsync();
             }
         }

@@ -62,6 +62,8 @@ public sealed class TransactionDto
     public Guid? ServiceId { get; set; }
     public string? ServiceName { get; set; }
     public Guid? TransferId { get; set; }
+    // Versión de la fila (xmin) que devuelve el detalle; se reenvía al editar para detectar cambios de otra sesión.
+    public long? Version { get; set; }
     public int AttachmentCount { get; set; }
     public List<AttachmentDto> Attachments { get; set; } = [];
 }
@@ -76,6 +78,8 @@ public sealed class TransactionForm
     public Guid? CategoryId { get; set; }
     public Guid? ServiceId { get; set; }
     public Guid? SourceAccountId { get; set; }
+    // Sólo al editar: la versión que se leyó. Si otra sesión guardó antes, la API responde 409.
+    public long? Version { get; set; }
 }
 public sealed class PagedTransactions
 {
